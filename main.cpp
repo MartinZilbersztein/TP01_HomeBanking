@@ -446,7 +446,7 @@ namespace FechaHora {
 
 namespace Menues{
     void Menu_Principal(Usuario usuario);
-    
+
     void Menu_Login(Usuario usuarios[])
     {
         const int MAX_INTENTOS = 3;
@@ -576,14 +576,14 @@ namespace Menues{
 
 void SistemaHomeBanking(){
     Usuario usuarios[5] = {
-        {12345678, "Juan Perez", 19900101, "juanp", "clave123", 1234567890, "juanperez@gmail.com", "Calle 123", 987654321, 1122334455},
+        {12345678, "Juan Perez", 19900101, "juánp", "clave123", 1234567890, "juanperez@gmail.com", "Calle 123", 987654321, 1122334455},
         {23456789, "Maria Gomez", 19920202, "mariag", "clave456", 2345678901, "mariagomez@gmail.com", "Calle 456", 876543210, 2233445566},
         {34567890, "Carlos Lopez", 19930303, "carlosl", "clave789", 3456789012, "carloslopez@gmail.com", "Calle 789", 765432109, 3344556677},
         {45678901, "Ana Torres", 19940404, "anat", "clave012", 4567890123, "anatorres@gmail.com", "Calle 012", 654321098, 4455667788},
         {56789012, "Luis Ramirez", 19950505, "luisr", "clave345", 5678901234, "luisramirez@gmail.com", "Calle 012", 543210987, 5566778899}
     };
+    SetConsoleOutputCP(CP_UTF8); // Cambia codificación de salida a UTF-8. https://share.gemini.google/EpwcvMRWv77G
     Menues::Menu_Login(usuarios);
-    
 }
 
 
