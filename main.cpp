@@ -1,5 +1,5 @@
 #include <iostream>
-// #include <iomanip>
+#include <iomanip>
 #include <ctime>
 // #include <string>
 #include <windows.h>
@@ -29,17 +29,17 @@ enum {
     BLANCO_BRILLANTE    = 15
 };
 
-struct Usuario{
+struct Usuario {
     int DNI;
     std::string nombre;
     int fechaNacimiento;
     std::string usuario;
     std::string clave;
-    int numeroCelular;  // 15 dígitos según E.164
+    long long numeroCelular; // 15 dígitos según E.164. Alternativa str15
     std::string correoElectronico;
     std::string direccion;
     int numeroCuentaCA;
-    short CBU;          // 22 dígitos según BCRA
+    long long CBU;           // 22 dígitos según BCRA. Alternativa str22
 };
 
 
@@ -50,13 +50,14 @@ void mostrarTexto(string texto){
 string obtenerEntrada(string texto){
     string entrada;
     mostrarTexto(texto);
-    cin >> entrada;
+    getline(cin, entrada);
     return entrada;
 }
-int obtenerEntradaEntera(string texto){
+int obtenerEntradaEntero(string texto){
     int entrada;
     mostrarTexto(texto);
     cin >> entrada;
+    cin.ignore();
     return entrada;
 }
 
@@ -449,25 +450,28 @@ namespace Menues{
     void Menu_Login(Usuario usuarios[])
     {
         const int MAX_INTENTOS = 3;
-        int contador = 0, dni, seEncontro;
+        int contador = 0, seEncontro, dni;
         string usuario, clave;
         bool esValido = false;
+
         mostrarTexto("Bienvenido al Sistema de Home Banking del Banco Haedo");
         do
         {
-            dni = obtenerEntradaEntera("Ingrese su DNI:");
+            contador++;
+
+            dni = obtenerEntradaEntero("Ingrese su DNI:");
             usuario = obtenerEntrada("Ingrese su usuario:");
             clave = obtenerEntrada("Ingrese su clave:");
+
             seEncontro = busBinVecDNI(usuarios, 5, dni);
             esValido = (seEncontro != -1 && usuarios[seEncontro].usuario == usuario && usuarios[seEncontro].clave == clave);
-            contador++;
-            if (!esValido) {
+
+            if (!esValido)
                 mostrarTexto("Datos incorrectos. Intento " + to_string(contador) + "/" + to_string(MAX_INTENTOS));
-            }
-        } while (contador <= MAX_INTENTOS && !esValido);
-        if (esValido) {
+        } while (contador < MAX_INTENTOS && !esValido);
+
+        if (esValido)
             Menu_Principal(usuarios[seEncontro]);
-        }
         else
         {
             mostrarTexto("Ud. deberá dirigirse a un Cajero Automático o al propio Banco");
@@ -575,14 +579,15 @@ namespace Menues{
 
 void SistemaHomeBanking(){
     Usuario usuarios[5] = {
-        {12345678, "Juan Perez", 19900101, "juánp", "clave123", 1234567890, "juanperez@gmail.com", "Calle 123", 987654321, 1122334455},
-        {23456789, "Maria Gomez", 19920202, "mariag", "clave456", 2345678901, "mariagomez@gmail.com", "Calle 456", 876543210, 2233445566},
-        {34567890, "Carlos Lopez", 19930303, "carlosl", "clave789", 3456789012, "carloslopez@gmail.com", "Calle 789", 765432109, 3344556677},
-        {45678901, "Ana Torres", 19940404, "anat", "clave012", 4567890123, "anatorres@gmail.com", "Calle 012", 654321098, 4455667788},
-        {56789012, "Luis Ramirez", 19950505, "luisr", "clave345", 5678901234, "luisramirez@gmail.com", "Calle 012", 543210987, 5566778899}
+        {12345678, "Juan Perez",   150398, "juanp",   "clave123", 1234567890, "juanperez@gmail.com",   "Calle 123", 987654321, 1122334455},
+        {23456789, "Maria Gomez",  210701, "mariag",  "clave456", 2345678901, "mariagomez@gmail.com",  "Calle 456", 876543210, 2233445566},
+        {34567890, "Carlos Lopez",  90495, "carlosl", "clave789", 3456789012, "carloslopez@gmail.com", "Calle 789", 765432109, 3344556677},
+        {45678901, "Ana Torres",   300199, "anat",    "clave012", 4567890123, "anatorres@gmail.com",   "Calle 012", 654321098, 4455667788},
+        {56789012, "Luis Ramirez", 120600, "luisr",   "clave345", 5678901234, "luisramirez@gmail.com", "Calle 012", 543210987, 5566778899}
     };
     SetConsoleOutputCP(CP_UTF8); // Cambia codificación de salida a UTF-8. https://share.gemini.google/EpwcvMRWv77G
     Menues::Menu_Login(usuarios);
+    // mostrarTexto("Hola: " + to_string(FechaHora::FechaHoy()));
 }
 
 
