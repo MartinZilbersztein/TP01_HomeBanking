@@ -312,7 +312,7 @@ namespace Screen {
   } // Espera
 
   void BarraTitulo() {
-    SetConsoleTitleA("Home Banking Mesopotamia");
+    SetConsoleTitleA("Home Banking Haedo");
   } // BarraTitulo
 
   void Pausa(string mensg="") {
@@ -358,22 +358,24 @@ void BloquearCambioTamaño() {
       Sleep(200);
       if (GetAsyncKeyState(VK_UP)) {
         if (Menu == lIni) {
-          _textcolor(15);
-          _gotoxy(cIni,lIni);
-          cout << aMenu[Menu-lIni];
-          Menu = lFin;
-          _textcolor(14);
-          _gotoxy(cIni,lFin);
-          cout << aMenu[Menu-lIni];
+          // CAMBIO: se usa la posición lógica del menú en lugar de _wherey()
+_textcolor(15);
+_gotoxy(cIni, Menu);
+cout << aMenu[Menu-lIni];
+Menu--;
+_gotoxy(cIni, Menu);
+_textcolor(14);
+cout << aMenu[Menu-lIni];
         }
         else {
-          _textcolor(15);
-          _gotoxy(cIni,_wherey());
-          cout << aMenu[Menu-lIni];
-          Menu--;
-          _gotoxy(cIni,_wherey()-1);
-          _textcolor(14);
-          cout << aMenu[Menu-lIni];
+          // CAMBIO: se usa la posición lógica del menú en lugar de _wherey()
+_textcolor(15);
+_gotoxy(cIni, Menu);
+cout << aMenu[Menu-lIni];
+Menu++;
+_gotoxy(cIni, Menu);
+_textcolor(14);
+cout << aMenu[Menu-lIni];
         }
       }
       else if (GetAsyncKeyState(VK_DOWN)) {
@@ -477,7 +479,9 @@ namespace Menues{
     }
     void Menu_Principal(Usuario usuario)
     {
-        const int NUM_OPCIONES = 20;
+      Screen::_clrscr();
+      Screen::BarraTitulo();
+      const int NUM_OPCIONES = 20;
         char opciones[NUM_OPCIONES][25] = {
             "Login",
             "Cuentas",
@@ -500,6 +504,7 @@ namespace Menues{
             "Compras",
             "Logout"
         };
+        
         int opcionSeleccionada = Screen::MenuNavegar(opciones, 1, NUM_OPCIONES, 5);
         switch (opcionSeleccionada)
         {
@@ -592,3 +597,12 @@ int main()
     SistemaHomeBanking();
     return 0;
 }
+
+/*int main()
+{
+    Screen::_gotoxy(10, 5);
+
+    cout << "PRUEBA";
+
+    return 0;
+}*/
