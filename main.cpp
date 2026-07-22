@@ -3,82 +3,84 @@
 #include <ctime>
 // #include <string>
 #include <windows.h>
+#include <fstream>
+#include <string>
 
 #define record struct
 
 using namespace std;
 
+
 typedef char str25[26];
 
-enum {
-    NEGRO               = 0,
-    AZUL                = 1,
-    VERDE               = 2,
-    CYAN                = 3,
-    ROJO                = 4,
-    MAGENTA             = 5,
-    AMARILLO            = 6,
-    BLANCO              = 7,
-    GRIS                = 8,
-    AZUL_CLARO          = 9,
-    VERDE_CLARO         = 10,
-    CYAN_CLARO          = 11,
-    ROJO_CLARO          = 12,
-    MAGENTA_CLARO       = 13,
-    AMARILLO_CLARO      = 14,
-    BLANCO_BRILLANTE    = 15
+enum
+{
+  NEGRO = 0,
+  AZUL = 1,
+  VERDE = 2,
+  CYAN = 3,
+  ROJO = 4,
+  MAGENTA = 5,
+  AMARILLO = 6,
+  BLANCO = 7,
+  GRIS = 8,
+  AZUL_CLARO = 9,
+  VERDE_CLARO = 10,
+  CYAN_CLARO = 11,
+  ROJO_CLARO = 12,
+  MAGENTA_CLARO = 13,
+  AMARILLO_CLARO = 14,
+  BLANCO_BRILLANTE = 15
 };
 
-struct Usuario {
-    int DNI;
-    std::string nombre;
-    int fechaNacimiento;
-    std::string usuario;
-    std::string clave;
-    long long numeroCelular; // 15 dígitos según E.164. Alternativa str15
-    std::string correoElectronico;
-    std::string direccion;
-    int numeroCuentaCA;
-    long long CBU;           // 22 dígitos según BCRA. Alternativa str22
+struct Usuario
+{
+  int DNI;
+  std::string nombre;
+  int fechaNacimiento;
+  std::string usuario;
+  std::string clave;
+  long long numeroCelular; // 15 dígitos según E.164. Alternativa str15
+  std::string correoElectronico;
+  std::string direccion;
+  int numeroCuentaCA;
+  long long CBU; // 22 dígitos según BCRA. Alternativa str22
+};
+
+struct sMovimientoCA
+{
+  short dia;
+  short mes;
+  short anio;
+  char tipoMov;
+  str25 detalle;
+  float importe;
 };
 
 
 
-void mostrarTexto(string texto){
-    cout << texto << endl;
-}
-string obtenerEntrada(string texto){
-    string entrada;
-    mostrarTexto(texto);
-    getline(cin, entrada);
-    return entrada;
-}
-int obtenerEntradaEntero(string texto){
-    int entrada;
-    mostrarTexto(texto);
-    cin >> entrada;
-    cin.ignore();
-    return entrada;
-}
-
-short busBinVecDNI(Usuario vec[], int dim, int dni) {
-    int izq = 0;
-    int der = dim - 1;
-    while (izq <= der) {
-        int medio = izq + (der - izq) / 2;
-        if (vec[medio].DNI == dni) {
-            return medio; // Elemento encontrado
-        }
-        else if (vec[medio].DNI < dni) {
-            izq = medio + 1; // Buscar en la mitad derecha
-        } else {
-            der = medio - 1; // Buscar en la mitad izquierda
-        }
+short busBinVecDNI(Usuario vec[], int dim, int dni)
+{
+  int izq = 0;
+  int der = dim - 1;
+  while (izq <= der)
+  {
+    int medio = izq + (der - izq) / 2;
+    if (vec[medio].DNI == dni)
+    {
+      return medio; // Elemento encontrado
     }
-    return -1; // Elemento no encontrado
+    else if (vec[medio].DNI < dni)
+    {
+      izq = medio + 1; // Buscar en la mitad derecha
+    }
+    else
+    {
+      der = medio - 1; // Buscar en la mitad izquierda
+    }
+  }
+  return -1; // Elemento no encontrado
 }
-
-
 
 /* FUNCIONES BRINDADAS POR EL PROFESOR */
 
@@ -126,13 +128,16 @@ short busBinVecDNI(Usuario vec[], int dim, int dni) {
 // NO es el de Borland sino el TDM-GCC-64 GNU-GCC Compiler
 // C++ Compiler x86_64-w64-mingw32-g++.exe
 
-namespace Screen {
+namespace Screen
+{
 
-  void setConsoleColor(WORD colText, WORD colBack) {
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),colText + 16*colBack);
+  void setConsoleColor(WORD colText, WORD colBack)
+  {
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), colText + 16 * colBack);
   } // setConsoleColor
 
-  void _window(short izq, short sup, short der, short inf) { // Clon de window()
+  void _window(short izq, short sup, short der, short inf)
+  { // Clon de window()
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(hConsole, &csbi);
@@ -144,7 +149,8 @@ namespace Screen {
     window.Bottom = inf - 1;
   } // _window
 
-  void _gotoxy(short x, short y) { // Clon de gotoxy()
+  void _gotoxy(short x, short y)
+  { // Clon de gotoxy()
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(hConsole, &csbi);
@@ -154,63 +160,73 @@ namespace Screen {
     coord.X = window.Left + x;
     coord.Y = window.Top + y;
     if (coord.X <= window.Right && coord.Y <= window.Bottom)
-        SetConsoleCursorPosition(hConsole, coord);
+      SetConsoleCursorPosition(hConsole, coord);
   } // _gotoxy
 
-  int _wherex() {
+  int _wherex()
+  {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
       return csbi.dwCursorPosition.X;
     return -1;
   } // _wherex
 
-  int _wherey() {
+  int _wherey()
+  {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
       return csbi.dwCursorPosition.Y;
     return -1;
   } // _wherey
 
-  void ActualizaColores(WORD colTextAct, WORD colBackAc) {
-  	                         // Clon de textcolor() y textbackground() combinados.
+  void ActualizaColores(WORD colTextAct, WORD colBackAc)
+  {
+    // Clon de textcolor() y textbackground() combinados.
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     // En Windows, el fondo se desplaza 4 bits a la izq. (se multiplica por 16)
     WORD atributo = colTextAct | (colBackAc << 4);
     SetConsoleTextAttribute(hConsole, atributo);
   } // ActualizaColores
 
-  WORD ObtenerColorTextoActual() {
+  WORD ObtenerColorTextoActual()
+  {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-    if (GetConsoleScreenBufferInfo(hConsole, &csbi)) {
-        // Aplica una máscara para quedarse únicamente con el color del texto
-        return csbi.wAttributes & 0x000F;
+    if (GetConsoleScreenBufferInfo(hConsole, &csbi))
+    {
+      // Aplica una máscara para quedarse únicamente con el color del texto
+      return csbi.wAttributes & 0x000F;
     }
     return 0; // Retorna 0 (negro) si hubo un error
   } // ObtenerColorTextoActual
 
-  WORD ObtenerColorFondo() {
+  WORD ObtenerColorFondo()
+  {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-    if (GetConsoleScreenBufferInfo(hConsole, &csbi)) {
-        // El color de fondo está en los primeros 4 bits de la parte alta
-        // Por lo tanto, dividimos entre 16 para extraerlo
-        return (csbi.wAttributes >> 4) & 0x0F;
+    if (GetConsoleScreenBufferInfo(hConsole, &csbi))
+    {
+      // El color de fondo está en los primeros 4 bits de la parte alta
+      // Por lo tanto, dividimos entre 16 para extraerlo
+      return (csbi.wAttributes >> 4) & 0x0F;
     }
     return -1; // Retorna -1 si ocurre un error
   } // ObtenerColorFondo
 
-  void _textcolor(WORD color) {
-    ActualizaColores(color,ObtenerColorFondo());
+  void _textcolor(WORD color)
+  {
+    ActualizaColores(color, ObtenerColorFondo());
   } // _textcolor
 
-  void _textbackground(WORD color) {
-    ActualizaColores(ObtenerColorTextoActual(),color);
+  void _textbackground(WORD color)
+  {
+    ActualizaColores(ObtenerColorTextoActual(), color);
   } // _textbackground
 
-  void _clrscr() { //Clon de _clrscr() LOCALIZADO (Solo limpia área de la ventana)
+  void _clrscr()
+  { // Clon de _clrscr() LOCALIZADO (Solo limpia área de la ventana)
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(hConsole, &csbi);
@@ -218,21 +234,23 @@ namespace Screen {
     DWORD escritos;
     WORD atributo = ObtenerColorTextoActual() | (ObtenerColorFondo() << 4);
     // Calcular ancho y alto de nuestra ventana
-    int ancho = window.Right-3 - window.Left;
+    int ancho = window.Right - 3 - window.Left;
 
     window.Left += 2;
     // Limpiar fila por fila dentro de los límites coordenados
-    for (short y = window.Top+2; y <= window.Bottom-1; ++y) {
-        COORD inicio_fila = { window.Left, y };
-        // Llena la fila actual con espacios en blanco
-        FillConsoleOutputCharacter(hConsole, ' ', ancho, inicio_fila, &escritos);
-        // Aplica el color de fondo actual a esos espacios en blanco
-        FillConsoleOutputAttribute(hConsole,atributo,ancho,inicio_fila,&escritos);
+    for (short y = window.Top + 2; y <= window.Bottom - 1; ++y)
+    {
+      COORD inicio_fila = {window.Left, y};
+      // Llena la fila actual con espacios en blanco
+      FillConsoleOutputCharacter(hConsole, ' ', ancho, inicio_fila, &escritos);
+      // Aplica el color de fondo actual a esos espacios en blanco
+      FillConsoleOutputAttribute(hConsole, atributo, ancho, inicio_fila, &escritos);
     }
     _gotoxy(1, 1); // Igual a Borland, al limpiar, regresa a (1,1) relativo.
   } // _clrscr
 
-  void _clreol() {
+  void _clreol()
+  {
     COORD coord;
     DWORD escrito;
     HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -247,46 +265,53 @@ namespace Screen {
     SetConsoleCursorPosition(hStdOut, coord);
   } // _clreol
 
-  void MnsgBox(short x, short y, string mensaje, char alinea, short ancho = 0) {
-    _gotoxy(x,y);
+  void MnsgBox(short x, short y, string mensaje, char alinea, short ancho = 0)
+  {
+    _gotoxy(x, y);
     if (alinea == 'i')
       cout << setw(ancho) << left << mensaje;
-  	else
+    else
       cout << setw(ancho) << right << mensaje;
   } // MnsgBox
 
-  void MnsgBox(short x, short y, string mensaje) {
-    _gotoxy(x,y);
+  void MnsgBox(short x, short y, string mensaje)
+  {
+    _gotoxy(x, y);
     cout << mensaje;
   } // MnsgBox
 
-  void MnsgBox(short x, short y, short colorText, string mensaje) {
-    _gotoxy(x,y);
+  void MnsgBox(short x, short y, short colorText, string mensaje)
+  {
+    _gotoxy(x, y);
     _textcolor(colorText);
     cout << mensaje;
   } // MnsgBox
 
-  void Marco(short x1, short y1, short x2, short y2, short colorTexto) {
-  	_textcolor(colorTexto);
-    MnsgBox(x1,y1,"╔");
-    MnsgBox(x2-1,y1,"╗");
-    for (short i = 1; i < x2-x1-1; i++)
-      MnsgBox(x1+i,y1,"═");
-    for (short i = 1; i < y2-y1-5; i++) {
-      MnsgBox(x1,y1+i,"║");
-      MnsgBox(x2-1,y1+i,"║");
+  void Marco(short x1, short y1, short x2, short y2, short colorTexto)
+  {
+    _textcolor(colorTexto);
+    MnsgBox(x1, y1, "╔");
+    MnsgBox(x2 - 1, y1, "╗");
+    for (short i = 1; i < x2 - x1 - 1; i++)
+      MnsgBox(x1 + i, y1, "═");
+    for (short i = 1; i < y2 - y1 - 5; i++)
+    {
+      MnsgBox(x1, y1 + i, "║");
+      MnsgBox(x2 - 1, y1 + i, "║");
     }
-    MnsgBox(x1,y2-5,"╚");
-    MnsgBox(x2-1,y2-5,"╝");
-    for (short i = 1; i < x2-x1-1; i++)
-      MnsgBox(x1+i,y2-5,"═");
+    MnsgBox(x1, y2 - 5, "╚");
+    MnsgBox(x2 - 1, y2 - 5, "╝");
+    for (short i = 1; i < x2 - x1 - 1; i++)
+      MnsgBox(x1 + i, y2 - 5, "═");
   } // Marco
 
-  string Separador(int ancho = 60, char car = '-') {
+  string Separador(int ancho = 60, char car = '-')
+  {
     return string(ancho, car);
   } // Separador
 
-  void OcultarCursor() {
+  void OcultarCursor()
+  {
     HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_CURSOR_INFO info;
     GetConsoleCursorInfo(consoleHandle, &info);
@@ -294,108 +319,121 @@ namespace Screen {
     SetConsoleCursorInfo(consoleHandle, &info);
   } // OcultarCursor
 
-  void MostrarCursor() {
+  void MostrarCursor()
+  {
     HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_CURSOR_INFO info;
     GetConsoleCursorInfo(consoleHandle, &info);
     info.bVisible = TRUE; // Muestra el cursor
     SetConsoleCursorInfo(consoleHandle, &info);
-  } //MostrarCursor
+  } // MostrarCursor
 
-	void Espera(short tiempo) {
-		_textcolor(7);
-  	MnsgBox(5,20,"Espere "+to_string(tiempo/1000)+" segundos");
-		_textcolor(15);
+  void Espera(short tiempo)
+  {
+    _textcolor(7);
+    MnsgBox(5, 20, "Espere " + to_string(tiempo / 1000) + " segundos");
+    _textcolor(15);
     Sleep(tiempo);
-    _gotoxy(5,20);
+    _gotoxy(5, 20);
     _clreol();
   } // Espera
 
-  void BarraTitulo() {
+  void BarraTitulo()
+  {
     SetConsoleTitleA("Home Banking Haedo");
   } // BarraTitulo
 
-  void Pausa(string mensg="") {
-	  short i = 1;
+  void Pausa(string mensg = "")
+  {
+    short i = 1;
 
-    MnsgBox(12,8,mensg);
+    MnsgBox(12, 8, mensg);
     GetAsyncKeyState(VK_SPACE);
-    while(not GetAsyncKeyState(VK_SPACE)) {
-			_textbackground(8);
-  	  MnsgBox(5,17,i,"Oprima la tecla");
-  	  setConsoleColor(AZUL,VERDE);
-	    MnsgBox(21,17,AMARILLO+16*VERDE,"ESPACIO");
-		  _textbackground(8);
-	    MnsgBox(29,17,i++,"para continuar...");
-  	  Sleep(1000);
-	    if (i == 16)
-		  	i = 1;
+    while (not GetAsyncKeyState(VK_SPACE))
+    {
+      _textbackground(8);
+      MnsgBox(5, 17, i, "Oprima la tecla");
+      setConsoleColor(AZUL, VERDE);
+      MnsgBox(21, 17, AMARILLO + 16 * VERDE, "ESPACIO");
+      _textbackground(8);
+      MnsgBox(29, 17, i++, "para continuar...");
+      Sleep(1000);
+      if (i == 16)
+        i = 1;
     }
   } // Pausa
 
-void BloquearCambioTamaño() {
+  void BloquearCambioTamaño()
+  {
     HWND hwnd = GetConsoleWindow(); // Obtiene identificador de la ventana.
     // Obtiene los estilos actuales de la ventana
     LONG style = GetWindowLong(hwnd, GWL_STYLE);
     style &= ~WS_MAXIMIZEBOX; // Quita botones de maximizar y redimensionar.
     style &= ~WS_SIZEBOX;
     SetWindowLong(hwnd, GWL_STYLE, style); // Aplica los nuevos estilos
-} // BloquearCambioTamaño
+  } // BloquearCambioTamaño
 
-  string Left(str25 cad, short cant) {
-    return string(cad,cant);
+  string Left(str25 cad, short cant)
+  {
+    return string(cad, cant);
   } // Left
 
-  int MenuNavegar(char aMenu[][25],short lIni, short lFin, short cIni) {
+  int MenuNavegar(char aMenu[][25], short lIni, short lFin, short cIni)
+  {
     int Menu = lIni;
 
     OcultarCursor();
-    MnsgBox(6,20,"Flecha ↑ ↓ para moverse sobre el menú");
-    MnsgBox(3,21,"Tecla ESCAPE seleccionar la opción del menú");
-    //GoToXY(cIni,lIni);
-    _gotoxy(cIni,lIni);
-    while(not GetAsyncKeyState(VK_ESCAPE)) {
+    MnsgBox(6, 20, "Flecha ↑ ↓ para moverse sobre el menú");
+    MnsgBox(3, 21, "Tecla ESCAPE seleccionar la opción del menú");
+    // GoToXY(cIni,lIni);
+    _gotoxy(cIni, lIni);
+    while (not GetAsyncKeyState(VK_ESCAPE))
+    {
       Sleep(200);
-      if (GetAsyncKeyState(VK_UP)) {
-        if (Menu == lIni) {
-          // CAMBIO: se usa la posición lógica del menú en lugar de _wherey()
-_textcolor(15);
-_gotoxy(cIni, Menu);
-cout << aMenu[Menu-lIni];
-Menu--;
-_gotoxy(cIni, Menu);
-_textcolor(14);
-cout << aMenu[Menu-lIni];
+      if (GetAsyncKeyState(VK_UP))
+      {
+        if (Menu == lIni)
+        {
+          _textcolor(15);
+          _gotoxy(cIni, lIni);
+          cout << aMenu[Menu - lIni];
+          Menu = lFin;
+          _textcolor(14);
+          _gotoxy(cIni, lFin);
+          cout << aMenu[Menu - lIni];
         }
-        else {
-          // CAMBIO: se usa la posición lógica del menú en lugar de _wherey()
-_textcolor(15);
-_gotoxy(cIni, Menu);
-cout << aMenu[Menu-lIni];
-Menu++;
-_gotoxy(cIni, Menu);
-_textcolor(14);
-cout << aMenu[Menu-lIni];
+        else
+        {
+          _textcolor(15);
+          _gotoxy(cIni, _wherey());
+          cout << aMenu[Menu - lIni];
+          Menu--;
+          _gotoxy(cIni, _wherey() - 1);
+          _textcolor(14);
+          cout << aMenu[Menu - lIni];
         }
       }
-      else if (GetAsyncKeyState(VK_DOWN)) {
-        if (Menu == lFin) {
+      else if (GetAsyncKeyState(VK_DOWN))
+      {
+        if (Menu == lFin)
+        {
           _textcolor(15);
-          _gotoxy(cIni,lFin);
-          cout << aMenu[Menu-lIni];
+          _gotoxy(cIni, lFin);
+          cout << aMenu[Menu - lIni];
           Menu = lIni;
-          _gotoxy(cIni,lIni);
+          _gotoxy(cIni, lIni);
           _textcolor(14);
-          cout << aMenu[Menu-lIni];
+          cout << aMenu[Menu - lIni];
         }
-        else {
+        else
+        {
           _textcolor(15);
-          _gotoxy(cIni,_wherey());
-          cout << aMenu[Menu-lIni];
+          _gotoxy(cIni, _wherey());
+          cout << aMenu[Menu - lIni];
           Menu++;
-          _gotoxy(cIni,_wherey()+1);
+          _gotoxy(cIni, _wherey() + 1);
           _textcolor(14);
-          cout << aMenu[Menu-lIni];
+          cout << aMenu[Menu - lIni];
         }
       }
     } // Fin While
@@ -405,199 +443,432 @@ cout << aMenu[Menu-lIni];
 
 } // Screen
 
-namespace FechaHora {
-  long GetTime(int &hh, int &mm, int &ss) {
-    time_t     rawtime;
+namespace FechaHora
+{
+  long GetTime(int &hh, int &mm, int &ss)
+  {
+    time_t rawtime;
     record tm *timeinfo;
 
-    time ( &rawtime );
-    timeinfo = localtime ( &rawtime );
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
     hh = timeinfo->tm_hour;
     mm = timeinfo->tm_min;
-		ss = timeinfo->tm_sec;
+    ss = timeinfo->tm_sec;
     return timeinfo->tm_hour * 10000 + timeinfo->tm_min * 100 + timeinfo->tm_sec;
   } // GetTime
 
-  long GetDate(int &year, int &mes, int &dia, int &ds) {
-    time_t     rawtime;
+  long GetDate(int &year, int &mes, int &dia, int &ds)
+  {
+    time_t rawtime;
     record tm *timeinfo;
 
-    time ( &rawtime );
-    timeinfo = localtime ( &rawtime );
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
     year = 1900 + timeinfo->tm_year;
-    mes  = 1 + timeinfo->tm_mon;
-    dia  = timeinfo->tm_mday;
-    ds   = 1 + timeinfo->tm_wday;
-    return (1900 + timeinfo->tm_year) * 10000 + (1 + timeinfo->tm_mon) * 100
-            + timeinfo->tm_mday;
+    mes = 1 + timeinfo->tm_mon;
+    dia = timeinfo->tm_mday;
+    ds = 1 + timeinfo->tm_wday;
+    return (1900 + timeinfo->tm_year) * 10000 + (1 + timeinfo->tm_mon) * 100 + timeinfo->tm_mday;
   } // GetDate
 
-  int FechaHoy() {
+  int FechaHoy()
+  {
     int año, mes, dia, dsem;
 
-    GetDate(año,mes,dia,dsem);
+    GetDate(año, mes, dia, dsem);
     cout << "Dia: " << setw(2) << dia << " Mes: " << setw(2) << mes
          << " Año:" << ' ' << setw(2) << año << endl;
-	  return dia * 10000 + mes * 100 + año;
+    return dia * 10000 + mes * 100 + año;
   } // FechaHoy
 
 } // FechaHora
 
 /* CIERRE DE FUNCIONES BRINDADAS POR EL PROFESOR */
 
+using namespace Screen;
 
-namespace Menues{
-    void Menu_Principal(Usuario usuario);
+void mostrarTexto(string texto)
+{
+  cout << texto << endl;
+}
+void obtenerEntrada(string &entrada, short x, short y, string mensaje)
+{
+  MnsgBox(x, y, mensaje);
+  getline(cin, entrada);
+}
+void obtenerEntrada(double &entrada, short x, short y, string mensaje)
+{
+  MnsgBox(x, y, mensaje);
+  cin >> entrada;
+  cin.ignore();
+}
+void obtenerEntrada(int &entrada, short x, short y, string mensaje)
+{
+  double entradaEntera;
+  obtenerEntrada(entradaEntera, x, y, mensaje);
+  entrada = entradaEntera;
+}
 
-    void Menu_Login(Usuario usuarios[])
+void limpiarEstadoTeclas()
+{
+  while (GetAsyncKeyState(VK_UP) & 0x8000 ||
+         GetAsyncKeyState(VK_DOWN) & 0x8000 ||
+         GetAsyncKeyState(VK_ESCAPE) & 0x8000 ||
+         GetAsyncKeyState(VK_RETURN) & 0x8000)
+  {
+    Sleep(20);
+  }
+}
+
+void limpiarBufferEntrada()
+{
+  FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+}
+
+namespace Archivos
+{
+  void LeerCA(sMovimientoCA vrMovimientosCA[], int &card)
+  {
+    string nombreArchivo = "MovimientosCA.txt";
+    ifstream archivo(nombreArchivo);
+
+    int i = 0;
+
+    while (archivo >> vrMovimientosCA[i].dia)
     {
-        const int MAX_INTENTOS = 3;
-        int contador = 0, seEncontro, dni;
-        string usuario, clave;
-        bool esValido = false;
+      archivo >> vrMovimientosCA[i].mes;
+      archivo >> vrMovimientosCA[i].anio;
+      archivo >> vrMovimientosCA[i].tipoMov;
 
-        mostrarTexto("Bienvenido al Sistema de Home Banking del Banco Haedo");
-        do
-        {
-            contador++;
+      archivo.ignore(); // sacar espacio antes del detalle
+      archivo.get(vrMovimientosCA[i].detalle, 25);
+      archivo >> vrMovimientosCA[i].importe;
 
-            dni = obtenerEntradaEntero("Ingrese su DNI:");
-            usuario = obtenerEntrada("Ingrese su usuario:");
-            clave = obtenerEntrada("Ingrese su clave:");
-
-            seEncontro = busBinVecDNI(usuarios, 5, dni);
-            esValido = (seEncontro != -1 && usuarios[seEncontro].usuario == usuario && usuarios[seEncontro].clave == clave);
-
-            if (!esValido)
-                mostrarTexto("Datos incorrectos. Intento " + to_string(contador) + "/" + to_string(MAX_INTENTOS));
-        } while (contador < MAX_INTENTOS && !esValido);
-
-        if (esValido)
-            Menu_Principal(usuarios[seEncontro]);
-        else
-        {
-            mostrarTexto("Ud. deberá dirigirse a un Cajero Automático o al propio Banco");
-            Screen::Pausa("Presione la tecla ESPACIO para finalizar...");
-        }
+      i++;
     }
-    void Menu_Principal(Usuario usuario)
+
+    archivo.close();
+
+    card = i;
+  }
+
+  void EscribirCA(sMovimientoCA rMovimientoCA, char moneda)
+  {
+    string nombreArchivo = "MovimientosCA.txt";
+    ofstream archivo(nombreArchivo, ios::app); // Abrir en modo append para agregar al final del archivo
+
+    archivo << endl;
+    archivo << setw(2) << rMovimientoCA.dia;
+    archivo << setw(2) << rMovimientoCA.mes;
+    archivo << setw(4) << rMovimientoCA.anio;
+    archivo << setw(1) << rMovimientoCA.tipoMov;
+    archivo << setw(25) << rMovimientoCA.detalle;
+    archivo << setw(10) << rMovimientoCA.importe;
+
+    archivo.close();
+  }
+}
+
+namespace Ordenar
+{
+  void ordXBurCA(sMovimientoCA vrMovimientosCA[], int card)
+  {
+    bool ordenado = false;
+    int i = 0;
+    int fechaNumero1, fechaNumero2;
+    do
     {
+      ordenado = true;
+      for (int j = 0; j < card - 1; j++)
+      {
+        fechaNumero1 = vrMovimientosCA[j].anio * 10000 + vrMovimientosCA[j].mes * 100 + vrMovimientosCA[j].dia;
+        fechaNumero2 = vrMovimientosCA[j + 1].anio * 10000 + vrMovimientosCA[j + 1].mes * 100 + vrMovimientosCA[j + 1].dia;
+        if (fechaNumero1 > fechaNumero2)
+        {
+          swap(vrMovimientosCA[j], vrMovimientosCA[j + 1]);
+          ordenado = false;
+        }
+      }
+    }while(!ordenado);
+  }
+}
+
+
+namespace Menues
+{
+  void Menu_Login(Usuario usuarios[]);
+  void Menu_Principal(Usuario usuario);
+  void Menu_Cuentas();
+  void Submenu_Cuentas(char divisa);
+  void Menu_TransferirDinero();
+  void Submenu_TransferirDinero(char metodo);
+
+  void Menu_Login(Usuario usuarios[])
+  {
+    const int MAX_INTENTOS = 3;
+    int contador = 0, seEncontro, dni;
+    string usuario, clave;
+    bool esValido = false;
+    Screen::_clrscr();
+    //Screen::_gotoxy(2,2);
+    Screen::BarraTitulo();
+    do
+    {
+      contador++;
       Screen::_clrscr();
-      Screen::BarraTitulo();
-      const int NUM_OPCIONES = 20;
-        char opciones[NUM_OPCIONES][25] = {
-            "Login",
-            "Cuentas",
-            "Transferir dinero",
-            "Tarjetas",
-            "Simulacion P.F.",
-            "Compra/Venta dolares",
-            "Inversion Plazo Fijo",
-            "Recargar",
-            "Generar Token",
-            "Mostrar CBU",
-            "Mis Cuentas",
-            "Datos personales",
-            "Modificar clave",
-            "Movimientos CA",
-            "Movimientos TD",
-            "Movimientos TC",
-            "Crear nueva cuenta",
-            "Deposito",
-            "Compras",
-            "Logout"
-        };
-        
-        int opcionSeleccionada = Screen::MenuNavegar(opciones, 1, NUM_OPCIONES, 5);
-        switch (opcionSeleccionada)
-        {
-            case 0:
-                mostrarTexto("Login seleccionado.");
-                break;
-            case 1:
-                mostrarTexto("Cuentas seleccionado.");
-                break;
-            case 2:
-                mostrarTexto("Transferir dinero seleccionado.");
-                break;
-            case 3:
-                mostrarTexto("Tarjetas seleccionado.");
-                break;
-            case 4:
-                mostrarTexto("Simulación P.F. seleccionada.");
-                break;
-            case 5:
-                mostrarTexto("Compra/Venta de dólares seleccionado.");
-                break;
-            case 6:
-                mostrarTexto("Inversión Plazo Fijo seleccionado.");
-                break;
-            case 7:
-                mostrarTexto("Recargar seleccionado.");
-                break;
-            case 8:
-                mostrarTexto("Generar Token seleccionado.");
-                break;
-            case 9:
-                mostrarTexto("Mostrar CBU seleccionado.");
-                break;
-            case 10:
-                mostrarTexto("Mis Cuentas seleccionado.");
-                break;
-            case 11:
-                mostrarTexto("Datos personales seleccionado.");
-                break;
-            case 12:
-                mostrarTexto("Modificar clave seleccionado.");
-                break;
-            case 13:
-                mostrarTexto("Movimientos de Caja de Ahorros seleccionado.");
-                break;
-            case 14:
-                mostrarTexto("Movimientos de Tarjeta de Débito seleccionado.");
-                break;
-            case 15:
-                mostrarTexto("Movimientos de Tarjeta de Crédito seleccionado.");
-                break;
-            case 16:
-                mostrarTexto("Crear nueva cuenta seleccionado.");
-                break;
-            case 17:
-                mostrarTexto("Depósito seleccionado.");
-                break;
-            case 18:
-                mostrarTexto("Compras seleccionado.");
-                break;
-            case 19:
-                mostrarTexto("Logout seleccionado.");
-                break;
-            default:
-                mostrarTexto("Opción inválida.");
-                break;
-        }
+      Screen::MnsgBox(2, 2, "Bienvenido al Sistema de Home Banking del Banco Haedo");
+      obtenerEntrada(dni, 2,4,"Ingrese su DNI: ");
+      obtenerEntrada(usuario, 2,6,"Ingrese su usuario: ");
+      obtenerEntrada(clave, 2,8,"Ingrese su clave: ");
+
+      seEncontro = busBinVecDNI(usuarios, 5, dni);
+      esValido = (seEncontro != -1 && usuarios[seEncontro].usuario == usuario && usuarios[seEncontro].clave == clave);
+
+      if (!esValido)
+      Screen::MnsgBox(2,12,"Datos incorrectos. Intento " + to_string(contador) + "/" + to_string(MAX_INTENTOS));
+      Screen::Espera(3000); // Espera 3 segundos antes de permitir otro intento
+    } while (contador < MAX_INTENTOS && !esValido);
+
+    if (esValido)
+      Menu_Principal(usuarios[seEncontro]);
+    else
+    {
+      mostrarTexto("Ud. deberá dirigirse a un Cajero Automático o al propio Banco");
+      Screen::Pausa();
     }
+  }
+
+  void Menu_Principal(Usuario usuario)
+  {
+    Screen::_clrscr();
+    Screen::Marco(2, 2, 78, 22, AZUL_CLARO);
+    Screen::BarraTitulo();
+    const int NUM_OPCIONES = 19;
+    char opciones[NUM_OPCIONES][25] = {
+        "Cuentas",
+        "Transferir dinero",
+        "Tarjetas",
+        "Simulacion P.F.",
+        "Compra/Venta dolares",
+        "Inversion Plazo Fijo",
+        "Recargar",
+        "Generar Token",
+        "Mostrar CBU",
+        "Mis Cuentas",
+        "Datos personales",
+        "Modificar clave",
+        "Movimientos CA",
+        "Movimientos TD",
+        "Movimientos TC",
+        "Crear nueva cuenta",
+        "Deposito",
+        "Compras",
+        "Logout"};
+    for (int i = 0; i < NUM_OPCIONES; i++)
+    {
+      Screen::_gotoxy(5, i + 1);
+      Screen::_textcolor(BLANCO);
+      cout << opciones[i];
+    }
+    int opcionSeleccionada = Screen::MenuNavegar(opciones, 1, NUM_OPCIONES, 5);
+
+    switch (opcionSeleccionada)
+    {
+    case 0:
+      Menu_Cuentas();
+      break;
+    case 1:
+      Menu_TransferirDinero();
+      break;
+    case 2:
+      mostrarTexto("Transferir dinero seleccionado.");
+      break;
+    case 3:
+      mostrarTexto("Tarjetas seleccionado.");
+      break;
+    case 4:
+      mostrarTexto("Simulación P.F. seleccionada.");
+      break;
+    case 5:
+      mostrarTexto("Compra/Venta de dólares seleccionado.");
+      break;
+    case 6:
+      mostrarTexto("Inversión Plazo Fijo seleccionado.");
+      break;
+    case 7:
+      mostrarTexto("Recargar seleccionado.");
+      break;
+    case 8:
+      mostrarTexto("Generar Token seleccionado.");
+      break;
+    case 9:
+      mostrarTexto("Mostrar CBU seleccionado.");
+      break;
+    case 10:
+      mostrarTexto("Mis Cuentas seleccionado.");
+      break;
+    case 11:
+      mostrarTexto("Datos personales seleccionado.");
+      break;
+    case 12:
+      mostrarTexto("Modificar clave seleccionado.");
+      break;
+    case 13:
+      mostrarTexto("Movimientos de Caja de Ahorros seleccionado.");
+      break;
+    case 14:
+      mostrarTexto("Movimientos de Tarjeta de Débito seleccionado.");
+      break;
+    case 15:
+      mostrarTexto("Movimientos de Tarjeta de Crédito seleccionado.");
+      break;
+    case 16:
+      mostrarTexto("Crear nueva cuenta seleccionado.");
+      break;
+    case 17:
+      mostrarTexto("Depósito seleccionado.");
+      break;
+    case 18:
+      mostrarTexto("Compras seleccionado.");
+      break;
+    case 19:
+      mostrarTexto("Logout seleccionado.");
+      break;
+    default:
+      mostrarTexto("Opción inválida.");
+      break;
+    }
+  }
+
+  
+  void Menu_Cuentas()
+  {
+    const int NUM_OPCIONES = 2;
+    limpiarEstadoTeclas();
+    limpiarBufferEntrada();
+    Screen::_clrscr();
+    Screen::BarraTitulo();
+    Screen::MnsgBox(20,2,"Seleccione la divisa");
+    char opciones[NUM_OPCIONES][25] = {
+        "Dólares",
+        "Pesos"};
+    for (int i = 0; i < NUM_OPCIONES; i++)
+    {
+      Screen::_gotoxy(5, i + 1);
+      Screen::_textcolor(BLANCO);
+      cout << opciones[i];
+    }
+    int opcionSeleccionada = Screen::MenuNavegar(opciones, 1, NUM_OPCIONES, 5);
+    limpiarEstadoTeclas();
+    Screen::MnsgBox(2,20,to_string(opcionSeleccionada));
+    switch (opcionSeleccionada)
+    {
+      case 0:
+        Submenu_Cuentas('D');
+        break;
+      case 1:
+        Submenu_Cuentas('P');
+        break;
+    }
+  }
+  void Submenu_Cuentas(char divisa)
+  {
+    int card;
+    bool ordenado = true;
+    sMovimientoCA vrMovimientosCA[20]; // Array para almacenar los movimientos leídos
+    Screen::_clrscr();
+    Screen::BarraTitulo();
+    Archivos::LeerCA(vrMovimientosCA, card); // Llamada de ejemplo a LeerCA
+    Ordenar::ordXBurCA(vrMovimientosCA, card);
+    int fechaHoy = FechaHora::FechaHoy();
+    Screen::MnsgBox(16,3,"Movimiento Caja de Ahorro Banco Haedo");
+    for (int i = 0; i < card; i++)
+    {
+      Screen::_gotoxy(5, i + 5);
+      Screen::_textcolor(BLANCO);
+      cout << "Movimiento " << setw(3) << i + 1 << ": "
+           << "Fecha: " << setw(2) << vrMovimientosCA[i].dia << "/" << setw(2) << vrMovimientosCA[i].mes << "/" << vrMovimientosCA[i].anio
+           << " Tipo: " << vrMovimientosCA[i].tipoMov
+           << " Detalle: " << setw(25) << vrMovimientosCA[i].detalle 
+           << " Importe: " << setw(10) << fixed << setprecision(2) << (divisa == 'P' ? vrMovimientosCA[i].importe : vrMovimientosCA[i].importe / 1500);
+    }
+    Screen::MnsgBox(2,_wherey()+2, "Pulse ENTER para volver al menú");
+    std::cin.get();
+  }
+
+  void Menu_TransferirDinero()
+  {
+    limpiarEstadoTeclas();
+    limpiarBufferEntrada();
+    Screen::_clrscr();
+    Screen::BarraTitulo();
+    Screen::MnsgBox(10, 1, "Seleccione método de transferencia.");
+    const int NUM_OPCIONES = 2;
+    char opciones[NUM_OPCIONES][25] = {
+        "CBU",
+        "Celular"};
+    for (int i = 0; i < NUM_OPCIONES; i++)
+    {
+      Screen::_gotoxy(5, i + 1);
+      Screen::_textcolor(BLANCO);
+      cout << opciones[i];
+    }
+    int opcionSeleccionada = Screen::MenuNavegar(opciones, 1, NUM_OPCIONES, 5);
+    limpiarEstadoTeclas();
+    Screen::MnsgBox(2,20,to_string(opcionSeleccionada));
+    switch (opcionSeleccionada)
+    {
+      case 0:
+        Submenu_TransferirDinero('A');
+        break;
+      case 1:
+        Submenu_TransferirDinero('C');
+        break;
+    }
+  }
+  void Submenu_TransferirDinero(char metodo)
+  {
+    string destinatario;
+    double monto;
+    Screen::_clrscr();
+    Screen::BarraTitulo();
+    if (metodo == 'A')
+    {
+      Screen::MnsgBox(10, 3, "Transferencia por CBU seleccionada.");
+    }
+    else if (metodo == 'C')
+    {
+      Screen::MnsgBox(10, 3, "Transferencia por Celular seleccionada.");
+    }
+    do{
+        obtenerEntrada(destinatario, 10, 7, "Ingrese el destinatario: ");
+    }while(destinatario == "");
+    do{
+        obtenerEntrada(monto, 10, 9, "Ingrese el monto a transferir: ");
+    }while(monto <=0);
+    Screen::MnsgBox(2,_wherey()+2, "Transferencia realizada");
+    Screen::MnsgBox(2, _wherey() + 2, "Pulse ENTER para volver al menú");
+    std::cin.get();
+  }
+
 }
 
-
-
-
-
-void SistemaHomeBanking(){
-    Usuario usuarios[5] = {
-        {12345678, "Juan Perez",   150398, "juanp",   "clave123", 1234567890, "juanperez@gmail.com",   "Calle 123", 987654321, 1122334455},
-        {23456789, "Maria Gomez",  210701, "mariag",  "clave456", 2345678901, "mariagomez@gmail.com",  "Calle 456", 876543210, 2233445566},
-        {34567890, "Carlos Lopez",  90495, "carlosl", "clave789", 3456789012, "carloslopez@gmail.com", "Calle 789", 765432109, 3344556677},
-        {45678901, "Ana Torres",   300199, "anat",    "clave012", 4567890123, "anatorres@gmail.com",   "Calle 012", 654321098, 4455667788},
-        {56789012, "Luis Ramirez", 120600, "luisr",   "clave345", 5678901234, "luisramirez@gmail.com", "Calle 012", 543210987, 5566778899}
-    };
-    SetConsoleOutputCP(CP_UTF8); // Cambia codificación de salida a UTF-8. https://share.gemini.google/EpwcvMRWv77G
-    Menues::Menu_Login(usuarios);
-    // mostrarTexto("Hola: " + to_string(FechaHora::FechaHoy()));
+void SistemaHomeBanking()
+{
+  Usuario usuarios[5] = {
+      {12345678, "Juan Perez", 150398, "juanp", "clave123", 1234567890, "juanperez@gmail.com", "Calle 123", 987654321, 1122334455},
+      {23456789, "Maria Gomez", 210701, "mariag", "clave456", 2345678901, "mariagomez@gmail.com", "Calle 456", 876543210, 2233445566},
+      {34567890, "Carlos Lopez", 90495, "carlosl", "clave789", 3456789012, "carloslopez@gmail.com", "Calle 789", 765432109, 3344556677},
+      {45678901, "Ana Torres", 300199, "anat", "clave012", 4567890123, "anatorres@gmail.com", "Calle 012", 654321098, 4455667788},
+      {56789012, "Luis Ramirez", 120600, "luisr", "clave345", 5678901234, "luisramirez@gmail.com", "Calle 012", 543210987, 5566778899}};
+  SetConsoleOutputCP(CP_UTF8); // Cambia codificación de salida a UTF-8. https://share.gemini.google/EpwcvMRWv77G
+  Menues::Menu_Login(usuarios);
+  // mostrarTexto("Hola: " + to_string(FechaHora::FechaHoy()));
 }
-
 
 int main()
 {
-    SistemaHomeBanking();
-    return 0;
+  SistemaHomeBanking();
+  return 0;
 }

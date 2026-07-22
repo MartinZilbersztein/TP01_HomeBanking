@@ -1,0 +1,20 @@
+ 2  1 2026 Compra supermercado            1250.50
+ 6  1 2026 Pago combustible               4500.00
+11  1 2026 Farmacia                       1800.25
+16  1 2026 Compra alimentos               3200.00
+22  1 2026 Restaurante                    2800.75
+ 4  2 2026 Libreria                        950.50
+ 9  2 2026 Supermercado                   5600.00
+13  2 2026 Ropa deportiva                 4200.00
+19  2 2026 Accesorios pc                  7500.50
+27  2 2026 Pago estacionamiento            600.00
+ 3  3 2026 Compra electronica            12500.00
+ 8  3 2026 Kiosco                          850.75
+15  3 2026 Veterinaria                    3500.00
+20  3 2026 Comida rapida                  1700.50
+26  3 2026 Transporte                     2200.00
+ 5  4 2026 Entrada cine                   3000.00
+12  4 2026 Regalo                         4800.25
+18  4 2026 Servicios hogar                6500.00
+24  4 2026 Compra varios                  3750.80
+30  4 2026 Mantenimiento                  9000.00

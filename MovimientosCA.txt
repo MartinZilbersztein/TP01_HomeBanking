@@ -1,0 +1,20 @@
+ 1  12 2026 D Compra supermercado           1250.50
+ 5  1 2026 H Extraccion cajero              500.00
+10  1 2026 D Pago servicios                2300.75
+15  1 2026 D Compra alimentos               850.20
+20  1 2026 H Transferencia recibida       15000.00
+ 3  2 2026 D Combustible                   4500.00
+ 8  2 2026 D Compra ropa                   3200.50
+12  2 2026 H Deposito sueldo              85000.00
+18  2 2026 D Pago internet                 1800.00
+25  2 2026 H Devolucion compra              750.00
+ 2  3 2026 D Farmacia                      1250.00
+ 7  3 2026 D Restaurante                   2800.75
+14  3 2026 H Transferencia familiar       10000.00
+21  3 2026 D Pago tarjeta                  7500.00
+28  3 2026 D Compra electronica           12500.50
+ 4  4 2026 H Deposito efectivo            20000.00
+11  4 2026 D Mantenimiento cuenta           500.00
+17  4 2026 D Supermercado                  4600.25
+23  4 2026 H Reintegro                     1200.00
+30  4 2026 D Compra varios                 3750.80
