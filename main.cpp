@@ -1,47 +1,46 @@
-
 #include <iostream>
-#include <iomanip>
+// #include <iomanip>
 #include <ctime>
-#include <string>
+// #include <string>
 #include <windows.h>
 
 #define record struct
 
 using namespace std;
 
-using str25 = std::string;
+typedef char str25[26];
 
 enum {
-    NEGRO = 0,
-    AZUL = 1,
-    VERDE = 2,
-    CYAN = 3,
-    ROJO = 4,
-    MAGENTA = 5,
-    AMARILLO = 6,
-    BLANCO = 7,
-    GRIS = 8,
-    AZUL_CLARO = 9,
-    VERDE_CLARO = 10,
-    CYAN_CLARO = 11,
-    ROJO_CLARO = 12,
-    MAGENTA_CLARO = 13,
-    AMARILLO_CLARO = 14,
-    BLANCO_BRILLANTE = 15
+    NEGRO               = 0,
+    AZUL                = 1,
+    VERDE               = 2,
+    CYAN                = 3,
+    ROJO                = 4,
+    MAGENTA             = 5,
+    AMARILLO            = 6,
+    BLANCO              = 7,
+    GRIS                = 8,
+    AZUL_CLARO          = 9,
+    VERDE_CLARO         = 10,
+    CYAN_CLARO          = 11,
+    ROJO_CLARO          = 12,
+    MAGENTA_CLARO       = 13,
+    AMARILLO_CLARO      = 14,
+    BLANCO_BRILLANTE    = 15
 };
 
 struct Usuario{
-        int DNI;
-        std::string nombre;
-        int fechaNacimiento;
-        std::string usuario;
-        std::string clave;
-        long long numeroCelular;
-        std::string correoElectronico;
-        std::string direccion;
-        long long numeroCuentaCA;
-        long long CBU;
-    };
+    int DNI;
+    std::string nombre;
+    int fechaNacimiento;
+    std::string usuario;
+    std::string clave;
+    int numeroCelular;  // 15 dígitos según E.164
+    std::string correoElectronico;
+    std::string direccion;
+    int numeroCuentaCA;
+    short CBU;          // 22 dígitos según BCRA
+};
 
 
 
@@ -80,7 +79,7 @@ short busBinVecDNI(Usuario vec[], int dim, int dni) {
 
 
 
-//FUNCIONES BRINDADAS POR EL PROFESOR
+/* FUNCIONES BRINDADAS POR EL PROFESOR */
 
 // TP1-2026: HOME BANKING.
 
@@ -441,8 +440,8 @@ namespace FechaHora {
 
 } // FechaHora
 
+/* CIERRE DE FUNCIONES BRINDADAS POR EL PROFESOR */
 
-//CIERRE DE FUNCIONES BRINDADAS POR EL PROFESOR
 
 namespace Menues{
     void Menu_Principal(Usuario usuario);
