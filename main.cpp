@@ -680,25 +680,25 @@ namespace Menues
     const int NUM_OPCIONES = 19;
     int opcionSeleccionada;
     str24 opciones[NUM_OPCIONES] = {
-      "Cuentas",
-      "Transferir dinero",
-      "Tarjetas",
-      "Simulacion P.F.",
-      "Compra/Venta dolares",
-      "Inversion Plazo Fijo",
-      "Recargar",
-      "Generar Token",
-      "Mostrar CBU",
-      "Mis Cuentas",
-      "Datos personales",
-      "Modificar clave",
-      "Movimientos CA",
-      "Movimientos TD",
-      "Movimientos TC",
-      "Crear nueva cuenta",
-      "Deposito",
-      "Compras",
-      "Logout"
+      " [] Cuentas",
+      "]>[ Transferir dinero",
+      "[¯] Tarjetas",
+      "+$? Simulacion P.F.",
+      "$>U Compra/Venta dolares",
+      "+$$ Inversion Plazo Fijo",
+      "  ╦ Recargar",
+      " +x Generar Token",
+      "132 Mostrar CBU",
+      " [] Mis Cuentas",
+      "()/ Datos personales",
+      "/*  Modificar clave",
+      "<O> Movimientos CA",
+      "<O> Movimientos TD",
+      "<O> Movimientos TC",
+      "+[] Crear nueva cuenta",
+      ">[] Depósito",
+      "|^| Compras",
+      "  ó Logout"
     };
 
     //_window(0, 0, 80, 52);
