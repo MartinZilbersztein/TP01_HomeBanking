@@ -10,10 +10,13 @@
 
 using namespace std;
 
-
 typedef char str25[26];
+typedef char str24[25];
 
-enum
+const int LINEAS = 25;
+const int COLS   = 80;
+
+enum Colores
 {
   NEGRO = 0,
   AZUL = 1,
@@ -33,16 +36,16 @@ enum
   BLANCO_BRILLANTE = 15
 };
 
-struct Usuario
+struct sUsuario
 {
   int DNI;
-  std::string nombre;
+  string nombre;
   int fechaNacimiento;
-  std::string usuario;
-  std::string clave;
+  string usuario;
+  string clave;
   long long numeroCelular; // 15 dígitos según E.164. Alternativa str15
-  std::string correoElectronico;
-  std::string direccion;
+  string correoElectronico;
+  string direccion;
   int numeroCuentaCA;
   long long CBU; // 22 dígitos según BCRA. Alternativa str22
 };
@@ -59,7 +62,7 @@ struct sMovimientoCA
 
 
 
-short busBinVecDNI(Usuario vec[], int dim, int dni)
+short busBinVecDNI(sUsuario vec[], int dim, int dni)
 {
   int izq = 0;
   int der = dim - 1;
@@ -67,20 +70,25 @@ short busBinVecDNI(Usuario vec[], int dim, int dni)
   {
     int medio = izq + (der - izq) / 2;
     if (vec[medio].DNI == dni)
-    {
       return medio; // Elemento encontrado
-    }
     else if (vec[medio].DNI < dni)
-    {
       izq = medio + 1; // Buscar en la mitad derecha
-    }
     else
-    {
       der = medio - 1; // Buscar en la mitad izquierda
-    }
   }
   return -1; // Elemento no encontrado
 }
+
+
+
+/* Según GPT, hay que agregar esto para que funcione _window
+ *
+ // LINEAS DE
+ // LÍNEA OBLIGATORIA: Aplica los cambios visuales en la consola real
+ // SetConsoleWindowInfo(hConsole, TRUE, &window);
+*/
+
+
 
 /* FUNCIONES BRINDADAS POR EL PROFESOR */
 
@@ -486,45 +494,50 @@ namespace FechaHora
 
 /* CIERRE DE FUNCIONES BRINDADAS POR EL PROFESOR */
 
+
+
+namespace EntradaSalida {
+    void mostrarTexto(string mensaje)
+    {
+        cout << mensaje << endl;
+    }
+    void obtenerEntrada(string &entrada, short x, short y, string mensaje)
+    {
+        Screen::MnsgBox(x, y, mensaje);
+        getline(cin, entrada);
+    }
+    void obtenerEntrada(double &entrada, short x, short y, string mensaje)
+    {
+        Screen::MnsgBox(x, y, mensaje);
+        cin >> entrada;
+        cin.ignore();
+    }
+    void obtenerEntrada(int &entrada, short x, short y, string mensaje)
+    {
+        double entradaEntera;
+        obtenerEntrada(entradaEntera, x, y, mensaje);
+        entrada = entradaEntera;
+    }
+
+    void limpiarEstadoTeclas()
+    {
+        while (GetAsyncKeyState(VK_UP) & 0x8000 ||
+                GetAsyncKeyState(VK_DOWN) & 0x8000 ||
+                GetAsyncKeyState(VK_ESCAPE) & 0x8000 ||
+                GetAsyncKeyState(VK_RETURN) & 0x8000)
+        {
+            Sleep(20);
+        }
+    }
+
+    void limpiarBufferEntrada()
+    {
+        FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+    }
+}
+
 using namespace Screen;
-
-void mostrarTexto(string texto)
-{
-  cout << texto << endl;
-}
-void obtenerEntrada(string &entrada, short x, short y, string mensaje)
-{
-  MnsgBox(x, y, mensaje);
-  getline(cin, entrada);
-}
-void obtenerEntrada(double &entrada, short x, short y, string mensaje)
-{
-  MnsgBox(x, y, mensaje);
-  cin >> entrada;
-  cin.ignore();
-}
-void obtenerEntrada(int &entrada, short x, short y, string mensaje)
-{
-  double entradaEntera;
-  obtenerEntrada(entradaEntera, x, y, mensaje);
-  entrada = entradaEntera;
-}
-
-void limpiarEstadoTeclas()
-{
-  while (GetAsyncKeyState(VK_UP) & 0x8000 ||
-         GetAsyncKeyState(VK_DOWN) & 0x8000 ||
-         GetAsyncKeyState(VK_ESCAPE) & 0x8000 ||
-         GetAsyncKeyState(VK_RETURN) & 0x8000)
-  {
-    Sleep(20);
-  }
-}
-
-void limpiarBufferEntrada()
-{
-  FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
-}
+using namespace EntradaSalida;
 
 namespace Archivos
 {
@@ -594,44 +607,67 @@ namespace Ordenar
   }
 }
 
-
 namespace Menues
 {
-  void Menu_Login(Usuario usuarios[]);
-  void Menu_Principal(Usuario usuario);
+  void Menu_Login(sUsuario vrUsuarios[]);
+  void Menu_Principal(sUsuario rUsuario);
   void Menu_Cuentas();
   void Submenu_Cuentas(char divisa);
   void Menu_TransferirDinero();
   void Submenu_TransferirDinero(char metodo);
 
-  void Menu_Login(Usuario usuarios[])
+  void mostDeco()
+  {
+    _textbackground(NEGRO);
+    _clrscr();
+    _textbackground(AMARILLO);
+    Marco(0, 0, COLS-2, LINEAS-2+4, AZUL_CLARO);
+    MnsgBox(COLS-16, 0, AZUL, "Banco Haedo");
+    ActualizaColores(BLANCO_BRILLANTE, NEGRO);
+  }
+
+  void mostRotuloMenu(string mensaje)
+  {
+    MnsgBox(COLS-mensaje.length()-5, 2, mensaje);
+  }
+
+  void obtenerOpcionSeleccionada(int &opcionSeleccionada, str24 opciones[], short numOpciones) {
+      for (int i = 0; i < numOpciones; i++)
+      {
+        _gotoxy(5, i + 1);
+        cout << opciones[i];
+      }
+      opcionSeleccionada = MenuNavegar(opciones, 1, numOpciones, 5);
+  }
+
+  void Menu_Login(sUsuario vrUsuarios[])
   {
     const int MAX_INTENTOS = 3;
     int contador = 0, seEncontro, dni;
     string usuario, clave;
     bool esValido = false;
-    Screen::_clrscr();
     //Screen::_gotoxy(2,2);
-    Screen::BarraTitulo();
+
     do
     {
       contador++;
-      Screen::_clrscr();
-      Screen::MnsgBox(2, 2, "Bienvenido al Sistema de Home Banking del Banco Haedo");
+      mostDeco();
+
+      MnsgBox(2, 2, "Bienvenido al Sistema de Home Banking del Banco Haedo");
       obtenerEntrada(dni, 2,4,"Ingrese su DNI: ");
       obtenerEntrada(usuario, 2,6,"Ingrese su usuario: ");
       obtenerEntrada(clave, 2,8,"Ingrese su clave: ");
 
-      seEncontro = busBinVecDNI(usuarios, 5, dni);
-      esValido = (seEncontro != -1 && usuarios[seEncontro].usuario == usuario && usuarios[seEncontro].clave == clave);
+      seEncontro = busBinVecDNI(vrUsuarios, 5, dni);
+      esValido = (seEncontro != -1 && vrUsuarios[seEncontro].usuario == usuario && vrUsuarios[seEncontro].clave == clave);
 
       if (!esValido)
-      Screen::MnsgBox(2,12,"Datos incorrectos. Intento " + to_string(contador) + "/" + to_string(MAX_INTENTOS));
-      Screen::Espera(3000); // Espera 3 segundos antes de permitir otro intento
+          MnsgBox(2,12,"Datos incorrectos. Intento " + to_string(contador) + "/" + to_string(MAX_INTENTOS));
+      Espera(3000); // Espera 3 segundos antes de permitir otro intento
     } while (contador < MAX_INTENTOS && !esValido);
 
     if (esValido)
-      Menu_Principal(usuarios[seEncontro]);
+      Menu_Principal(vrUsuarios[seEncontro]);
     else
     {
       mostrarTexto("Ud. deberá dirigirse a un Cajero Automático o al propio Banco");
@@ -639,129 +675,121 @@ namespace Menues
     }
   }
 
-  void Menu_Principal(Usuario usuario)
+  void Menu_Principal(sUsuario rUsuario)
   {
-    Screen::_clrscr();
-    Screen::Marco(2, 2, 78, 22, AZUL_CLARO);
-    Screen::BarraTitulo();
     const int NUM_OPCIONES = 19;
-    char opciones[NUM_OPCIONES][25] = {
-        "Cuentas",
-        "Transferir dinero",
-        "Tarjetas",
-        "Simulacion P.F.",
-        "Compra/Venta dolares",
-        "Inversion Plazo Fijo",
-        "Recargar",
-        "Generar Token",
-        "Mostrar CBU",
-        "Mis Cuentas",
-        "Datos personales",
-        "Modificar clave",
-        "Movimientos CA",
-        "Movimientos TD",
-        "Movimientos TC",
-        "Crear nueva cuenta",
-        "Deposito",
-        "Compras",
-        "Logout"};
-    for (int i = 0; i < NUM_OPCIONES; i++)
-    {
-      Screen::_gotoxy(5, i + 1);
-      Screen::_textcolor(BLANCO);
-      cout << opciones[i];
-    }
-    int opcionSeleccionada = Screen::MenuNavegar(opciones, 1, NUM_OPCIONES, 5);
+    int opcionSeleccionada;
+    str24 opciones[NUM_OPCIONES] = {
+      "Cuentas",
+      "Transferir dinero",
+      "Tarjetas",
+      "Simulacion P.F.",
+      "Compra/Venta dolares",
+      "Inversion Plazo Fijo",
+      "Recargar",
+      "Generar Token",
+      "Mostrar CBU",
+      "Mis Cuentas",
+      "Datos personales",
+      "Modificar clave",
+      "Movimientos CA",
+      "Movimientos TD",
+      "Movimientos TC",
+      "Crear nueva cuenta",
+      "Deposito",
+      "Compras",
+      "Logout"
+    };
 
+    //_window(0, 0, 80, 52);
+    mostDeco();
+    //void _window(short izq, short sup, short der, short inf)
+
+    obtenerOpcionSeleccionada(opcionSeleccionada, opciones, NUM_OPCIONES);
     switch (opcionSeleccionada)
     {
-    case 0:
-      Menu_Cuentas();
-      break;
-    case 1:
-      Menu_TransferirDinero();
-      break;
-    case 2:
-      mostrarTexto("Transferir dinero seleccionado.");
-      break;
-    case 3:
-      mostrarTexto("Tarjetas seleccionado.");
-      break;
-    case 4:
-      mostrarTexto("Simulación P.F. seleccionada.");
-      break;
-    case 5:
-      mostrarTexto("Compra/Venta de dólares seleccionado.");
-      break;
-    case 6:
-      mostrarTexto("Inversión Plazo Fijo seleccionado.");
-      break;
-    case 7:
-      mostrarTexto("Recargar seleccionado.");
-      break;
-    case 8:
-      mostrarTexto("Generar Token seleccionado.");
-      break;
-    case 9:
-      mostrarTexto("Mostrar CBU seleccionado.");
-      break;
-    case 10:
-      mostrarTexto("Mis Cuentas seleccionado.");
-      break;
-    case 11:
-      mostrarTexto("Datos personales seleccionado.");
-      break;
-    case 12:
-      mostrarTexto("Modificar clave seleccionado.");
-      break;
-    case 13:
-      mostrarTexto("Movimientos de Caja de Ahorros seleccionado.");
-      break;
-    case 14:
-      mostrarTexto("Movimientos de Tarjeta de Débito seleccionado.");
-      break;
-    case 15:
-      mostrarTexto("Movimientos de Tarjeta de Crédito seleccionado.");
-      break;
-    case 16:
-      mostrarTexto("Crear nueva cuenta seleccionado.");
-      break;
-    case 17:
-      mostrarTexto("Depósito seleccionado.");
-      break;
-    case 18:
-      mostrarTexto("Compras seleccionado.");
-      break;
-    case 19:
-      mostrarTexto("Logout seleccionado.");
-      break;
-    default:
-      mostrarTexto("Opción inválida.");
-      break;
+      case 0:
+        Menu_Cuentas();
+        break;
+      case 1:
+        Menu_TransferirDinero();
+        break;
+      case 2:
+        mostrarTexto("Transferir dinero seleccionado.");
+        break;
+      case 3:
+        mostrarTexto("Tarjetas seleccionado.");
+        break;
+      case 4:
+        mostrarTexto("Simulación P.F. seleccionada.");
+        break;
+      case 5:
+        mostrarTexto("Compra/Venta de dólares seleccionado.");
+        break;
+      case 6:
+        mostrarTexto("Inversión Plazo Fijo seleccionado.");
+        break;
+      case 7:
+        mostrarTexto("Recargar seleccionado.");
+        break;
+      case 8:
+        mostrarTexto("Generar Token seleccionado.");
+        break;
+      case 9:
+        mostrarTexto("Mostrar CBU seleccionado.");
+        break;
+      case 10:
+        mostrarTexto("Mis Cuentas seleccionado.");
+        break;
+      case 11:
+        mostrarTexto("Datos personales seleccionado.");
+        break;
+      case 12:
+        mostrarTexto("Modificar clave seleccionado.");
+        break;
+      case 13:
+        mostrarTexto("Movimientos de Caja de Ahorros seleccionado.");
+        break;
+      case 14:
+        mostrarTexto("Movimientos de Tarjeta de Débito seleccionado.");
+        break;
+      case 15:
+        mostrarTexto("Movimientos de Tarjeta de Crédito seleccionado.");
+        break;
+      case 16:
+        mostrarTexto("Crear nueva cuenta seleccionado.");
+        break;
+      case 17:
+        mostrarTexto("Depósito seleccionado.");
+        break;
+      case 18:
+        mostrarTexto("Compras seleccionado.");
+        break;
+      case 19:
+        mostrarTexto("Logout seleccionado.");
+        break;
     }
   }
 
-  
+
   void Menu_Cuentas()
   {
     const int NUM_OPCIONES = 2;
+    int opcionSeleccionada;
+    str24 opciones[NUM_OPCIONES] = {
+      "Dólares",
+      "Pesos"
+    };
+
     limpiarEstadoTeclas();
     limpiarBufferEntrada();
-    Screen::_clrscr();
-    Screen::BarraTitulo();
-    Screen::MnsgBox(20,2,"Seleccione la divisa");
-    char opciones[NUM_OPCIONES][25] = {
-        "Dólares",
-        "Pesos"};
-    for (int i = 0; i < NUM_OPCIONES; i++)
-    {
-      Screen::_gotoxy(5, i + 1);
-      Screen::_textcolor(BLANCO);
-      cout << opciones[i];
-    }
-    int opcionSeleccionada = Screen::MenuNavegar(opciones, 1, NUM_OPCIONES, 5);
+    mostDeco();
+
+    mostRotuloMenu("Seleccione la divisa");
+    obtenerOpcionSeleccionada(opcionSeleccionada, opciones, NUM_OPCIONES);
+
     limpiarEstadoTeclas();
-    Screen::MnsgBox(2,20,to_string(opcionSeleccionada));
+    MnsgBox(2, 20, to_string(opcionSeleccionada));
     switch (opcionSeleccionada)
     {
       case 0:
@@ -772,99 +800,114 @@ namespace Menues
         break;
     }
   }
+
   void Submenu_Cuentas(char divisa)
   {
     int card;
     bool ordenado = true;
     sMovimientoCA vrMovimientosCA[20]; // Array para almacenar los movimientos leídos
-    Screen::_clrscr();
-    Screen::BarraTitulo();
+
+    _clrscr();
+    // DesBloquearCambioTamaño()
+
     Archivos::LeerCA(vrMovimientosCA, card); // Llamada de ejemplo a LeerCA
     Ordenar::ordXBurCA(vrMovimientosCA, card);
-    int fechaHoy = FechaHora::FechaHoy();
-    Screen::MnsgBox(16,3,"Movimiento Caja de Ahorro Banco Haedo");
+
+    FechaHora::FechaHoy();
+    MnsgBox(16,3,"Movimiento Caja de Ahorro Banco Haedo");
     for (int i = 0; i < card; i++)
     {
-      Screen::_gotoxy(5, i + 5);
-      Screen::_textcolor(BLANCO);
-      cout << "Movimiento " << setw(3) << i + 1 << ": "
-           << "Fecha: " << setw(2) << vrMovimientosCA[i].dia << "/" << setw(2) << vrMovimientosCA[i].mes << "/" << vrMovimientosCA[i].anio
-           << " Tipo: " << vrMovimientosCA[i].tipoMov
-           << " Detalle: " << setw(25) << vrMovimientosCA[i].detalle 
-           << " Importe: " << setw(10) << fixed << setprecision(2) << (divisa == 'P' ? vrMovimientosCA[i].importe : vrMovimientosCA[i].importe / 1500);
+      _gotoxy(5, i + 5);
+      _textcolor(BLANCO);
+      cout << "Movimiento " <<  setw(3) << i + 1 << ": "
+           << "Fecha: "     <<  setw(2) << vrMovimientosCA[i].dia << "/" << setw(2) << vrMovimientosCA[i].mes << "/" << vrMovimientosCA[i].anio
+           << " Tipo: "                 << vrMovimientosCA[i].tipoMov
+           << " Detalle: "  << setw(25) << vrMovimientosCA[i].detalle
+           << " Importe: "  << setw(10) << fixed << setprecision(2) << (divisa == 'P' ? vrMovimientosCA[i].importe : vrMovimientosCA[i].importe / 1500);
     }
-    Screen::MnsgBox(2,_wherey()+2, "Pulse ENTER para volver al menú");
-    std::cin.get();
+
+    MnsgBox(2,_wherey()+2, "Pulse ENTER para volver al menú");
+    OcultarCursor();
+
+    cin.get();
+    MostrarCursor();
+    //BloquearCambioTamaño
   }
 
   void Menu_TransferirDinero()
   {
+    const int NUM_OPCIONES = 2;
+    int opcionSeleccionada;
+    str24 opciones[NUM_OPCIONES] = {
+      "CBU",
+      "Celular"
+    };
+    enum Metodos {
+      CBU,
+      CELULAR
+    };
+
     limpiarEstadoTeclas();
     limpiarBufferEntrada();
-    Screen::_clrscr();
-    Screen::BarraTitulo();
-    Screen::MnsgBox(10, 1, "Seleccione método de transferencia.");
-    const int NUM_OPCIONES = 2;
-    char opciones[NUM_OPCIONES][25] = {
-        "CBU",
-        "Celular"};
-    for (int i = 0; i < NUM_OPCIONES; i++)
-    {
-      Screen::_gotoxy(5, i + 1);
-      Screen::_textcolor(BLANCO);
-      cout << opciones[i];
-    }
-    int opcionSeleccionada = Screen::MenuNavegar(opciones, 1, NUM_OPCIONES, 5);
+    mostDeco();
+
+    MnsgBox(10, 1, "Seleccione método de transferencia.");
+    obtenerOpcionSeleccionada(opcionSeleccionada, opciones, NUM_OPCIONES);
     limpiarEstadoTeclas();
-    Screen::MnsgBox(2,20,to_string(opcionSeleccionada));
+    MnsgBox(2, 20, to_string(opcionSeleccionada));
+
     switch (opcionSeleccionada)
     {
-      case 0:
+      case CBU:
         Submenu_TransferirDinero('A');
         break;
-      case 1:
+      case CELULAR:
         Submenu_TransferirDinero('C');
         break;
     }
   }
+
   void Submenu_TransferirDinero(char metodo)
   {
     string destinatario;
     double monto;
-    Screen::_clrscr();
-    Screen::BarraTitulo();
+    mostDeco();
+
     if (metodo == 'A')
-    {
-      Screen::MnsgBox(10, 3, "Transferencia por CBU seleccionada.");
-    }
-    else if (metodo == 'C')
-    {
-      Screen::MnsgBox(10, 3, "Transferencia por Celular seleccionada.");
-    }
+      MnsgBox(10, 3, "Transferencia por CBU seleccionada.");
+    else
+      MnsgBox(10, 3, "Transferencia por Celular seleccionada.");
+
     do{
-        obtenerEntrada(destinatario, 10, 7, "Ingrese el destinatario: ");
-    }while(destinatario == "");
-    do{
-        obtenerEntrada(monto, 10, 9, "Ingrese el monto a transferir: ");
-    }while(monto <=0);
-    Screen::MnsgBox(2,_wherey()+2, "Transferencia realizada");
-    Screen::MnsgBox(2, _wherey() + 2, "Pulse ENTER para volver al menú");
-    std::cin.get();
+      obtenerEntrada(destinatario, 10, 7, "Ingrese el destinatario: ");
+    } while(destinatario == "");
+
+    do {
+      obtenerEntrada(monto, 10, 9, "Ingrese el monto a transferir: ");
+    } while(monto <= 0);
+
+    MnsgBox(2,_wherey()+2, "Transferencia realizada");
+
+    MnsgBox(2, _wherey() + 2, "Pulse ENTER para volver al menú");
+    cin.get();
   }
 
 }
 
 void SistemaHomeBanking()
 {
-  Usuario usuarios[5] = {
+  const int NUM_USUARIOS = 5;
+  sUsuario vrUsuarios[NUM_USUARIOS] = {
       {12345678, "Juan Perez", 150398, "juanp", "clave123", 1234567890, "juanperez@gmail.com", "Calle 123", 987654321, 1122334455},
       {23456789, "Maria Gomez", 210701, "mariag", "clave456", 2345678901, "mariagomez@gmail.com", "Calle 456", 876543210, 2233445566},
       {34567890, "Carlos Lopez", 90495, "carlosl", "clave789", 3456789012, "carloslopez@gmail.com", "Calle 789", 765432109, 3344556677},
       {45678901, "Ana Torres", 300199, "anat", "clave012", 4567890123, "anatorres@gmail.com", "Calle 012", 654321098, 4455667788},
-      {56789012, "Luis Ramirez", 120600, "luisr", "clave345", 5678901234, "luisramirez@gmail.com", "Calle 012", 543210987, 5566778899}};
+      {56789012, "Luis Ramirez", 120600, "luisr", "clave345", 5678901234, "luisramirez@gmail.com", "Calle 012", 543210987, 5566778899}
+  };
   SetConsoleOutputCP(CP_UTF8); // Cambia codificación de salida a UTF-8. https://share.gemini.google/EpwcvMRWv77G
-  Menues::Menu_Login(usuarios);
-  // mostrarTexto("Hola: " + to_string(FechaHora::FechaHoy()));
+  BarraTitulo();
+  // _window(0, 0, 80, 25);
+  Menues::Menu_Login(vrUsuarios);
 }
 
 int main()
