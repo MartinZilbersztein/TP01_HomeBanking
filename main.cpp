@@ -691,7 +691,7 @@ namespace Menues
       "132 Mostrar CBU",
       " [] Mis Cuentas",
       "()/ Datos personales",
-      "/*  Modificar clave",
+      "/** Modificar clave",
       "<O> Movimientos CA",
       "<O> Movimientos TD",
       "<O> Movimientos TC",
