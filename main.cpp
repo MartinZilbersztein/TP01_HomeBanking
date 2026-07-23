@@ -12,6 +12,7 @@ using namespace std;
 
 typedef char str25[26];
 typedef char str24[25];
+typedef char str5[6];
 
 const int LINEAS = 25;
 const int COLS   = 80;
@@ -60,7 +61,24 @@ struct sMovimientoCA
   float importe;
 };
 
+struct sMovimientoTD
+{
+  short dia;
+  short mes;
+  short anio;
+  str25 detalle;
+  float importe;
+};
 
+struct sMovimientoTC
+{
+  short dia;
+  short mes;
+  short anio;
+  str25 detalle;
+  str5 cuotas;
+  float importe;
+};
 
 short busBinVecDNI(sUsuario vec[], int dim, int dni)
 {
@@ -541,7 +559,7 @@ using namespace EntradaSalida;
 
 namespace Archivos
 {
-  void LeerCA(sMovimientoCA vrMovimientosCA[], int &card)
+  void leerCA(sMovimientoCA vrMovimientosCA[], int &card)
   {
     string nombreArchivo = "MovimientosCA.txt";
     ifstream archivo(nombreArchivo);
@@ -566,21 +584,109 @@ namespace Archivos
     card = i;
   }
 
-  void EscribirCA(sMovimientoCA rMovimientoCA, char moneda)
+  void escribirCA(sMovimientoCA rMovimientoCA, char moneda)
   {
     string nombreArchivo = "MovimientosCA.txt";
     ofstream archivo(nombreArchivo, ios::app); // Abrir en modo append para agregar al final del archivo
 
     archivo << endl;
-    archivo << setw(2) << rMovimientoCA.dia;
-    archivo << setw(2) << rMovimientoCA.mes;
-    archivo << setw(4) << rMovimientoCA.anio;
-    archivo << setw(1) << rMovimientoCA.tipoMov;
+    archivo << setw(2)  << rMovimientoCA.dia;
+    archivo << setw(2)  << rMovimientoCA.mes;
+    archivo << setw(4)  << rMovimientoCA.anio;
+    archivo << setw(1)  << rMovimientoCA.tipoMov;
     archivo << setw(25) << rMovimientoCA.detalle;
     archivo << setw(10) << rMovimientoCA.importe;
 
     archivo.close();
   }
+
+  void agregarMovimientoVRCA(sMovimientoCA vrMovimientosCA[], int &cardMovCA, int i,
+                              short dia, short mes, short anio, char tipoMov, str25 detalle, float importe)
+  {
+    sMovimientoCA rMovimientoCA;
+    rMovimientoCA.dia = dia;
+    rMovimientoCA.mes = mes;
+    rMovimientoCA.anio = anio;
+    rMovimientoCA.tipoMov = tipoMov;
+    strcpy(rMovimientoCA.detalle, detalle);
+    rMovimientoCA.importe = importe;
+    vrMovimientosCA[cardMovCA + i] = rMovimientoCA;
+  }
+
+  void leerTD(sMovimientoCA vrMovCA[], sMovimientoTD vrMovTD[], int &cardMovCA, int &cardMovTD)
+  {
+    sMovimientoCA rMovimientoCA;
+    string nombreArchivo = "MovimientosTD.txt";
+    ifstream archivo(nombreArchivo);
+
+    int i = 0;
+
+    while (archivo >> vrMovTD[i].dia && i <= sizeof(vrMovTD))
+    {
+      archivo >> vrMovTD[i].mes;
+      archivo >> vrMovTD[i].anio;
+
+      archivo.ignore(); // sacar espacio antes del detalle
+      archivo.get(vrMovTD[i].detalle, 25);
+
+      archivo >> vrMovTD[i].importe;
+
+      agregarMovimientoVRCA(
+        vrMovCA, cardMovCA, i,
+        vrMovTD[i].dia, vrMovTD[i].mes, vrMovTD[i].anio, 'D', vrMovTD[i].detalle, vrMovTD[i].importe
+      );
+      i++;
+    }
+
+    archivo.close();
+
+    cardMovTD = i;
+    cardMovCA += cardMovTD;
+  }
+
+  void leerTC(sMovimientoCA vrMovCA[], sMovimientoTC vrMovTC[], int &cardMovCA, int &cardMovTC)
+  {
+    sMovimientoCA rMovimientoCA;
+    string nombreArchivo = "MovimientosTC.txt";
+    ifstream archivo(nombreArchivo);
+
+    int i = 0;
+
+    while (archivo >> vrMovTC[i].dia && i <= sizeof(vrMovTC))
+    {
+      archivo >> vrMovTC[i].mes;
+      archivo >> vrMovTC[i].anio;
+
+      archivo.ignore(); // sacar espacio antes del detalle
+      archivo.get(vrMovTC[i].detalle, 25);
+
+      archivo.ignore();
+      archivo.get(vrMovTC[i].cuotas, 5);
+
+      archivo >> vrMovTC[i].importe;
+
+      agregarMovimientoVRCA(
+        vrMovCA, cardMovCA, i,
+        vrMovTC[i].dia, vrMovTC[i].mes, vrMovTC[i].anio, 'D', vrMovTC[i].detalle, vrMovTC[i].importe
+      );
+      i++;
+    }
+
+    archivo.close();
+
+    cardMovTC = i;
+    cardMovCA += cardMovTC;
+  }
+
+  /* void AgregarRegistroCA(sMovimientoCA vrMovimientosCA[], int &card, char moneda)
+  {
+
+  }
+
+  void Cargar(sMovimientoCA vrMovimientosCA[], int &card, char moneda)
+  {
+
+  } */
 }
 
 namespace Ordenar
@@ -593,11 +699,11 @@ namespace Ordenar
     do
     {
       ordenado = true;
-      for (int j = 0; j < card - 1; j++)
+      for (int j = 0; j < card; j++)
       {
-        fechaNumero1 = vrMovimientosCA[j].anio * 10000 + vrMovimientosCA[j].mes * 100 + vrMovimientosCA[j].dia;
-        fechaNumero2 = vrMovimientosCA[j + 1].anio * 10000 + vrMovimientosCA[j + 1].mes * 100 + vrMovimientosCA[j + 1].dia;
-        if (fechaNumero1 > fechaNumero2)
+        if (vrMovimientosCA[j].anio > vrMovimientosCA[j + 1].anio &&
+            vrMovimientosCA[j].mes  > vrMovimientosCA[j + 1].mes &&
+            vrMovimientosCA[j].dia > vrMovimientosCA[j + 1].dia)
         {
           swap(vrMovimientosCA[j], vrMovimientosCA[j + 1]);
           ordenado = false;
@@ -803,19 +909,24 @@ namespace Menues
 
   void Submenu_Cuentas(char divisa)
   {
-    int card;
+    int cardMovCA, cardMovTD, cardMovTC;
     bool ordenado = true;
-    sMovimientoCA vrMovimientosCA[20]; // Array para almacenar los movimientos leídos
+    sMovimientoCA vrMovimientosCA[40]; // Array para almacenar los movimientos leídos
+    sMovimientoTD vrMovimientosTD[20]; // Array para almacenar los movimientos leídos
+    sMovimientoTC vrMovimientosTC[20]; // Array para almacenar los movimientos leídos
 
     _clrscr();
     // DesBloquearCambioTamaño()
 
-    Archivos::LeerCA(vrMovimientosCA, card); // Llamada de ejemplo a LeerCA
-    Ordenar::ordXBurCA(vrMovimientosCA, card);
+    Archivos::leerCA(vrMovimientosCA, cardMovCA); // Llamada de ejemplo a leerCA
+    Ordenar::ordXBurCA(vrMovimientosCA, cardMovCA);
+
+    Archivos::leerTD(vrMovimientosCA, vrMovimientosTD, cardMovCA, cardMovTD);
+    Archivos::leerTC(vrMovimientosCA, vrMovimientosTC, cardMovCA, cardMovTC);
 
     FechaHora::FechaHoy();
     MnsgBox(16,3,"Movimiento Caja de Ahorro Banco Haedo");
-    for (int i = 0; i < card; i++)
+    for (int i = 0; i < cardMovCA; i++)
     {
       _gotoxy(5, i + 5);
       _textcolor(BLANCO);
