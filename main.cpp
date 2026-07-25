@@ -13,9 +13,11 @@ using namespace std;
 typedef char str25[26];
 typedef char str24[25];
 typedef char str5[6];
+typedef char str3[4];
 
 const int LINEAS = 25;
 const int COLS   = 80;
+const int COTIZACION_USD = 1500;
 
 enum Colores
 {
@@ -35,6 +37,19 @@ enum Colores
   MAGENTA_CLARO = 13,
   AMARILLO_CLARO = 14,
   BLANCO_BRILLANTE = 15
+};
+
+enum Divisas { USD, ARS };
+str3 divisasSimbolos[2] = { "u$d", "$" };
+
+enum TipoMov {
+  DEBE = 'D',
+  HABER = 'H'
+};
+
+enum MetodosTransferencia {
+  CBU,
+  CELULAR
 };
 
 struct sUsuario
@@ -76,7 +91,7 @@ struct sMovimientoTC
   short mes;
   short anio;
   str25 detalle;
-  str5 cuotas;
+  str5 cuota;
   float importe;
 };
 
@@ -559,29 +574,30 @@ using namespace EntradaSalida;
 
 namespace Archivos
 {
-  void leerCA(sMovimientoCA vrMovimientosCA[], int &card)
+  void leerCA(sMovimientoCA vrMovimientosCA[], int &cardMovCA, int maxMovCA)
   {
     string nombreArchivo = "MovimientosCA.txt";
     ifstream archivo(nombreArchivo);
 
     int i = 0;
 
-    while (archivo >> vrMovimientosCA[i].dia)
+    while (archivo >> vrMovimientosCA[i].dia && i < maxMovCA)
     {
       archivo >> vrMovimientosCA[i].mes;
       archivo >> vrMovimientosCA[i].anio;
       archivo >> vrMovimientosCA[i].tipoMov;
-
       archivo.ignore(); // sacar espacio antes del detalle
       archivo.get(vrMovimientosCA[i].detalle, 25);
+      archivo.ignore(); // sacar espacio después del detalle
       archivo >> vrMovimientosCA[i].importe;
+      archivo.ignore();
 
       i++;
     }
 
     archivo.close();
 
-    card = i;
+    cardMovCA = i;
   }
 
   void escribirCA(sMovimientoCA rMovimientoCA, char moneda)
@@ -590,12 +606,12 @@ namespace Archivos
     ofstream archivo(nombreArchivo, ios::app); // Abrir en modo append para agregar al final del archivo
 
     archivo << endl;
-    archivo << setw(2)  << rMovimientoCA.dia;
-    archivo << setw(2)  << rMovimientoCA.mes;
-    archivo << setw(4)  << rMovimientoCA.anio;
-    archivo << setw(1)  << rMovimientoCA.tipoMov;
-    archivo << setw(25) << rMovimientoCA.detalle;
-    archivo << setw(10) << rMovimientoCA.importe;
+    archivo <<        setw(2)  << rMovimientoCA.dia;
+    archivo << " " << setw(2)  << rMovimientoCA.mes;
+    archivo << " " << setw(4)  << rMovimientoCA.anio;
+    archivo << " " << setw(1)  << rMovimientoCA.tipoMov;
+    archivo << " " << setw(25) << rMovimientoCA.detalle;
+    archivo << " " << setw(10) << rMovimientoCA.importe;
 
     archivo.close();
   }
@@ -610,10 +626,17 @@ namespace Archivos
     rMovimientoCA.tipoMov = tipoMov;
     strcpy(rMovimientoCA.detalle, detalle);
     rMovimientoCA.importe = importe;
+
+    /*for (i = 0; i < maxMovCA && cardMovCA + i < maxMovCA; i++)
+    {
+      if (vrMovimientosCA[cardMovCA + i].dia == dia &&
+          vrMovimientosCA[cardMovCA + i].mes == mes &&
+          vrMovimientosCA*/
+
     vrMovimientosCA[cardMovCA + i] = rMovimientoCA;
   }
 
-  void leerTD(sMovimientoCA vrMovCA[], sMovimientoTD vrMovTD[], int &cardMovCA, int &cardMovTD)
+  void leerTD(sMovimientoCA vrMovCA[], int &cardMovCA, int maxMovCA, sMovimientoTD vrMovTD[], int &cardMovTD)
   {
     sMovimientoCA rMovimientoCA;
     string nombreArchivo = "MovimientosTD.txt";
@@ -621,61 +644,66 @@ namespace Archivos
 
     int i = 0;
 
-    while (archivo >> vrMovTD[i].dia && i <= sizeof(vrMovTD))
+    while (archivo >> vrMovTD[i].dia && cardMovCA + i < maxMovCA)
     {
       archivo >> vrMovTD[i].mes;
       archivo >> vrMovTD[i].anio;
-
       archivo.ignore(); // sacar espacio antes del detalle
       archivo.get(vrMovTD[i].detalle, 25);
-
+      archivo.ignore(); // sacar espacio después del detalle
       archivo >> vrMovTD[i].importe;
+      archivo.ignore();
 
       agregarMovimientoVRCA(
         vrMovCA, cardMovCA, i,
-        vrMovTD[i].dia, vrMovTD[i].mes, vrMovTD[i].anio, 'D', vrMovTD[i].detalle, vrMovTD[i].importe
+        vrMovTD[i].dia, vrMovTD[i].mes, vrMovTD[i].anio, DEBE, vrMovTD[i].detalle, vrMovTD[i].importe
       );
+
       i++;
     }
 
     archivo.close();
 
     cardMovTD = i;
-    cardMovCA += cardMovTD;
+    cardMovCA += i;
   }
 
-  void leerTC(sMovimientoCA vrMovCA[], sMovimientoTC vrMovTC[], int &cardMovCA, int &cardMovTC)
+  void leerTC(sMovimientoCA vrMovCA[], int &cardMovCA, int maxMovCA, sMovimientoTC vrMovTC[], int &cardMovTC)
   {
     sMovimientoCA rMovimientoCA;
     string nombreArchivo = "MovimientosTC.txt";
     ifstream archivo(nombreArchivo);
 
     int i = 0;
+    int posMovCA = cardMovCA;
 
-    while (archivo >> vrMovTC[i].dia && i <= sizeof(vrMovTC))
+    while (archivo >> vrMovTC[i].dia && cardMovCA + i < maxMovCA)
     {
       archivo >> vrMovTC[i].mes;
       archivo >> vrMovTC[i].anio;
-
-      archivo.ignore(); // sacar espacio antes del detalle
-      archivo.get(vrMovTC[i].detalle, 25);
-
       archivo.ignore();
-      archivo.get(vrMovTC[i].cuotas, 5);
+      archivo.get(vrMovTC[i].detalle, 25);
+      archivo.ignore();
+      archivo.get(vrMovTC[i].cuota, 5);
+      archivo.ignore();
 
       archivo >> vrMovTC[i].importe;
+      // archivo.ignore();
+
+      posMovCA = cardMovCA + i;
 
       agregarMovimientoVRCA(
         vrMovCA, cardMovCA, i,
-        vrMovTC[i].dia, vrMovTC[i].mes, vrMovTC[i].anio, 'D', vrMovTC[i].detalle, vrMovTC[i].importe
+        vrMovTC[i].dia, vrMovTC[i].mes, vrMovTC[i].anio, DEBE, vrMovTC[i].detalle, vrMovTC[i].importe
       );
+
       i++;
     }
 
     archivo.close();
 
     cardMovTC = i;
-    cardMovCA += cardMovTC;
+    cardMovCA += i;
   }
 
   /* void AgregarRegistroCA(sMovimientoCA vrMovimientosCA[], int &card, char moneda)
@@ -691,21 +719,101 @@ namespace Archivos
 
 namespace Ordenar
 {
+  void agregarEnOrden(string vector[], string elem, short &card)
+  {
+    while (card > 1 && elem < vector[card - 1]) {
+      vector[card] = vector[card - 1];
+      card--;
+    }
+    vector[card] = elem;
+  }
+
+  void agregarEnOrdenCA(sMovimientoCA vrMovCA[], sMovimientoCA elem, short &card)
+  {
+    int fechaElem = elem.anio * 10000 + elem.mes  * 100 + elem.dia;
+
+    while (card > 1 && fechaElem < vrMovCA[card - 1].anio * 10000 + vrMovCA[card - 1].mes  * 100 + vrMovCA[card - 1].dia) {
+      vrMovCA[card] = vrMovCA[card - 1];
+      card--;
+    }
+    vrMovCA[card] = elem;
+  }
+
   void ordXBurCA(sMovimientoCA vrMovimientosCA[], int card)
   {
     bool ordenado = false;
-    int i = 0;
-    int fechaNumero1, fechaNumero2;
+    int k = 0;
+    int fecha1, fecha2;
+
     do
     {
       ordenado = true;
-      for (int j = 0; j < card; j++)
+      k++;
+      for (int i = 0; i < card - k; i++)
       {
-        if (vrMovimientosCA[j].anio > vrMovimientosCA[j + 1].anio &&
-            vrMovimientosCA[j].mes  > vrMovimientosCA[j + 1].mes &&
-            vrMovimientosCA[j].dia > vrMovimientosCA[j + 1].dia)
+        fecha1 = vrMovimientosCA[i].anio * 10000 +
+                 vrMovimientosCA[i].mes  * 100 +
+                 vrMovimientosCA[i].dia;
+        fecha2 = vrMovimientosCA[i+1].anio * 10000 +
+                 vrMovimientosCA[i+1].mes  * 100 +
+                 vrMovimientosCA[i+1].dia;
+        if (fecha1 > fecha2)
         {
-          swap(vrMovimientosCA[j], vrMovimientosCA[j + 1]);
+          swap(vrMovimientosCA[i], vrMovimientosCA[i + 1]);
+          ordenado = false;
+        }
+      }
+    }while(!ordenado);
+  }
+
+  void ordXBurTD(sMovimientoTD vrMovimientosTD[], int card)
+  {
+    bool ordenado = false;
+    int k = 0;
+    int fecha1, fecha2;
+
+    do
+    {
+      ordenado = true;
+      k++;
+      for (int i = 0; i < card - k; i++)
+      {
+        fecha1 = vrMovimientosTD[i].anio * 10000 +
+                 vrMovimientosTD[i].mes  * 100 +
+                 vrMovimientosTD[i].dia;
+        fecha2 = vrMovimientosTD[i+1].anio * 10000 +
+                 vrMovimientosTD[i+1].mes  * 100 +
+                 vrMovimientosTD[i+1].dia;
+        if (fecha1 > fecha2)
+        {
+          swap(vrMovimientosTD[i], vrMovimientosTD[i + 1]);
+          ordenado = false;
+        }
+      }
+    }while(!ordenado);
+  }
+
+  void ordXBurTC(sMovimientoTC vrMovimientosTC[], int card)
+  {
+    bool ordenado = false;
+    int k = 0;
+    int fecha1, fecha2;
+
+    do
+    {
+      ordenado = true;
+      k++;
+      for (int i = 0; i < card - k; i++)
+      {
+        fecha1 = vrMovimientosTC[i].anio * 10000 +
+                 vrMovimientosTC[i].mes  * 100 +
+                 vrMovimientosTC[i].dia;
+        fecha2 = vrMovimientosTC[i+1].anio * 10000 +
+                 vrMovimientosTC[i+1].mes  * 100 +
+                 vrMovimientosTC[i+1].dia;
+        if (fecha1 > fecha2)
+        {
+          swap(vrMovimientosTC[i], vrMovimientosTC[i + 1]);
           ordenado = false;
         }
       }
@@ -715,17 +823,37 @@ namespace Ordenar
 
 namespace Menues
 {
-  void Menu_Login(sUsuario vrUsuarios[]);
-  void Menu_Principal(sUsuario rUsuario);
-  void Menu_Cuentas();
-  void Submenu_Cuentas(char divisa);
+  void Menu_Login(sUsuario vrUsuarios[], sUsuario &rUsuario, bool &correr);
+  void Menu_Principal(sUsuario rUsuario, bool &correr);
+  void Menu_Cuentas(sMovimientoCA vrMovimientosCA[], int cardMovCA);
+  void Submenu_Cuentas(sMovimientoCA vrMovimientosCA[], int &cardMovCA, short divisa);
   void Menu_TransferirDinero();
   void Submenu_TransferirDinero(char metodo);
+  void Menu_TarjetaDebito(sMovimientoTD vrMovimientosTD[], int &cardMovTD);
+  void Menu_TarjetaCredito(sMovimientoTC vrMovimientosTC[], int &cardMovTC);
+  void Menu_Logout(bool &correr);
 
-  void mostDeco()
+  void clrFullScr()
   {
-    _textbackground(NEGRO);
-    _clrscr();
+    system("CLS");
+  }
+
+  void pararFullScr()
+  {
+    MnsgBox(2, _wherey() + 2, "Oprima la tecla ESPACIO para continuar...");
+    GetAsyncKeyState(VK_SPACE);
+    while (not GetAsyncKeyState(VK_SPACE))
+      Sleep(1000);
+    //BloquearCambioTamaño
+  }
+
+  void inicMostDeco()
+  {
+    limpiarEstadoTeclas();
+    limpiarBufferEntrada();
+    //_textbackground(NEGRO);
+    //_clrscr();
+    clrFullScr();
     _textbackground(AMARILLO);
     Marco(0, 0, COLS-2, LINEAS-2+4, AZUL_CLARO);
     MnsgBox(COLS-16, 0, AZUL, "Banco Haedo");
@@ -738,15 +866,15 @@ namespace Menues
   }
 
   void obtenerOpcionSeleccionada(int &opcionSeleccionada, str24 opciones[], short numOpciones) {
-      for (int i = 0; i < numOpciones; i++)
-      {
-        _gotoxy(5, i + 1);
-        cout << opciones[i];
-      }
-      opcionSeleccionada = MenuNavegar(opciones, 1, numOpciones, 5);
+    for (int i = 0; i < numOpciones; i++)
+    {
+      _gotoxy(5, i + 1);
+      cout << opciones[i];
+    }
+    opcionSeleccionada = MenuNavegar(opciones, 1, numOpciones, 5);
   }
 
-  void Menu_Login(sUsuario vrUsuarios[])
+  void Menu_Login(sUsuario vrUsuarios[], sUsuario &rUsuario, bool &correr)
   {
     const int MAX_INTENTOS = 3;
     int contador = 0, seEncontro, dni;
@@ -757,34 +885,58 @@ namespace Menues
     do
     {
       contador++;
-      mostDeco();
+      inicMostDeco();
 
       MnsgBox(2, 2, "Bienvenido al Sistema de Home Banking del Banco Haedo");
-      obtenerEntrada(dni, 2,4,"Ingrese su DNI: ");
-      obtenerEntrada(usuario, 2,6,"Ingrese su usuario: ");
-      obtenerEntrada(clave, 2,8,"Ingrese su clave: ");
+      obtenerEntrada(dni,     2, 4, "Ingrese su DNI     : ");
+      obtenerEntrada(usuario, 2, 5, "Ingrese su usuario : ");
+      obtenerEntrada(clave,   2, 6, "Ingrese su clave   : ");
 
       seEncontro = busBinVecDNI(vrUsuarios, 5, dni);
       esValido = (seEncontro != -1 && vrUsuarios[seEncontro].usuario == usuario && vrUsuarios[seEncontro].clave == clave);
 
       if (!esValido)
-          MnsgBox(2,12,"Datos incorrectos. Intento " + to_string(contador) + "/" + to_string(MAX_INTENTOS));
+        MnsgBox(2,12,"Datos incorrectos. Intento " + to_string(contador) + "/" + to_string(MAX_INTENTOS));
       Espera(3000); // Espera 3 segundos antes de permitir otro intento
     } while (contador < MAX_INTENTOS && !esValido);
 
     if (esValido)
-      Menu_Principal(vrUsuarios[seEncontro]);
+      rUsuario = vrUsuarios[seEncontro];
     else
     {
       mostrarTexto("Ud. deberá dirigirse a un Cajero Automático o al propio Banco");
-      Screen::Pausa();
+      Pausa();
     }
+
+    correr = esValido;
   }
 
-  void Menu_Principal(sUsuario rUsuario)
+  void inicMenuPrincipal(string nombre,
+                                sMovimientoCA vrMovimientosCA[], int &cardMovCA, int maxMovCA,
+                                sMovimientoTD vrMovimientosTD[], int &cardMovTD,
+                                sMovimientoTC vrMovimientosTC[], int &cardMovTC)
+  {
+    inicMostDeco();
+    mostRotuloMenu("Bienvenido/a " + nombre);
+    Archivos::leerCA(vrMovimientosCA, cardMovCA, maxMovCA);
+    Archivos::leerTD(vrMovimientosCA, cardMovCA, maxMovCA, vrMovimientosTD, cardMovTD);
+    Archivos::leerTC(vrMovimientosCA, cardMovCA, maxMovCA, vrMovimientosTC, cardMovTC);
+    Ordenar::ordXBurCA(vrMovimientosCA, cardMovCA);
+    Ordenar::ordXBurTC(vrMovimientosTC, cardMovTC);
+    Ordenar::ordXBurTD(vrMovimientosTD, cardMovTD);
+  }
+
+  void Menu_Principal(sUsuario rUsuario, bool &correr)
   {
     const int NUM_OPCIONES = 19;
-    int opcionSeleccionada;
+    const int MAX_MOV_TD   = 20;
+    const int MAX_MOV_TC   = 20;
+    const int MAX_MOV_CA   = MAX_MOV_TD + MAX_MOV_TC + 25;
+    int opcionSeleccionada, cardMovCA, cardMovTD, cardMovTC;
+    sMovimientoCA vrMovimientosCA[MAX_MOV_CA]; // Array para almacenar los movimientos leídos
+    sMovimientoTD vrMovimientosTD[MAX_MOV_TD];
+    sMovimientoTC vrMovimientosTC[MAX_MOV_TC];
+
     str24 opciones[NUM_OPCIONES] = {
       " [] Cuentas",
       "]>[ Transferir dinero",
@@ -807,78 +959,79 @@ namespace Menues
       "  ó Logout"
     };
 
+    inicMenuPrincipal(rUsuario.nombre,
+                      vrMovimientosCA, cardMovCA, MAX_MOV_CA,
+                      vrMovimientosTD, cardMovTD,
+                      vrMovimientosTC, cardMovTC);
+
     //_window(0, 0, 80, 52);
-    mostDeco();
     //void _window(short izq, short sup, short der, short inf)
 
     obtenerOpcionSeleccionada(opcionSeleccionada, opciones, NUM_OPCIONES);
     switch (opcionSeleccionada)
     {
       case 0:
-        Menu_Cuentas();
+        Menu_Cuentas(vrMovimientosCA, cardMovCA);
         break;
       case 1:
         Menu_TransferirDinero();
         break;
       case 2:
-        mostrarTexto("Transferir dinero seleccionado.");
-        break;
-      case 3:
         mostrarTexto("Tarjetas seleccionado.");
         break;
-      case 4:
+      case 3:
         mostrarTexto("Simulación P.F. seleccionada.");
         break;
-      case 5:
+      case 4:
         mostrarTexto("Compra/Venta de dólares seleccionado.");
         break;
-      case 6:
+      case 5:
         mostrarTexto("Inversión Plazo Fijo seleccionado.");
         break;
-      case 7:
+      case 6:
         mostrarTexto("Recargar seleccionado.");
         break;
-      case 8:
+      case 7:
         mostrarTexto("Generar Token seleccionado.");
         break;
-      case 9:
+      case 8:
         mostrarTexto("Mostrar CBU seleccionado.");
         break;
-      case 10:
+      case 9:
         mostrarTexto("Mis Cuentas seleccionado.");
         break;
-      case 11:
+      case 10:
         mostrarTexto("Datos personales seleccionado.");
         break;
-      case 12:
+      case 11:
         mostrarTexto("Modificar clave seleccionado.");
         break;
-      case 13:
+      case 12:
         mostrarTexto("Movimientos de Caja de Ahorros seleccionado.");
         break;
+      case 13:
+        Menu_TarjetaDebito(vrMovimientosTD, cardMovTD);
+        break;
       case 14:
-        mostrarTexto("Movimientos de Tarjeta de Débito seleccionado.");
+        Menu_TarjetaCredito(vrMovimientosTC, cardMovTC);
         break;
       case 15:
-        mostrarTexto("Movimientos de Tarjeta de Crédito seleccionado.");
-        break;
-      case 16:
         mostrarTexto("Crear nueva cuenta seleccionado.");
         break;
-      case 17:
+      case 16:
         mostrarTexto("Depósito seleccionado.");
         break;
-      case 18:
+      case 17:
         mostrarTexto("Compras seleccionado.");
         break;
-      case 19:
-        mostrarTexto("Logout seleccionado.");
+      case 18:
+        Menu_Logout(correr);
         break;
     }
   }
 
 
-  void Menu_Cuentas()
+  void Menu_Cuentas(sMovimientoCA vrMovimientosCA[], int cardMovCA)
   {
     const int NUM_OPCIONES = 2;
     int opcionSeleccionada;
@@ -887,62 +1040,102 @@ namespace Menues
       "Pesos"
     };
 
-    limpiarEstadoTeclas();
-    limpiarBufferEntrada();
-    mostDeco();
+    inicMostDeco();
 
     mostRotuloMenu("Seleccione la divisa");
     obtenerOpcionSeleccionada(opcionSeleccionada, opciones, NUM_OPCIONES);
 
-    limpiarEstadoTeclas();
     MnsgBox(2, 20, to_string(opcionSeleccionada));
-    switch (opcionSeleccionada)
-    {
-      case 0:
-        Submenu_Cuentas('D');
-        break;
-      case 1:
-        Submenu_Cuentas('P');
-        break;
-    }
+    Submenu_Cuentas(vrMovimientosCA, cardMovCA, opcionSeleccionada);
   }
 
-  void Submenu_Cuentas(char divisa)
+  float convertirMonedas(float importeEntrada, short divisaEntrada, short divisaSalida)
   {
-    int cardMovCA, cardMovTD, cardMovTC;
-    bool ordenado = true;
-    sMovimientoCA vrMovimientosCA[40]; // Array para almacenar los movimientos leídos
-    sMovimientoTD vrMovimientosTD[20]; // Array para almacenar los movimientos leídos
-    sMovimientoTC vrMovimientosTC[20]; // Array para almacenar los movimientos leídos
+    float importeSalida = importeEntrada;
 
-    _clrscr();
+    if (divisaEntrada == ARS && divisaSalida == USD)
+      importeEntrada *= COTIZACION_USD;
+    else if (divisaEntrada == USD && divisaSalida == ARS)
+      importeEntrada /= COTIZACION_USD;
+
+    return importeSalida;
+  }
+
+  // string fmtImporte(float importe, short divisa)
+  // {
+  //   //string importeStr = to_string(importe);
+  //   //char* importeChar = new char[importeStr.length() + 1];
+  //   //strcpy(importeChar, importeStr.c_str());
+  //   //strcat(divisasSimbolos[divisa]);
+  //   short enteros, decimales;
+  //   div_t
+
+  //   enteros   = (int)importe;
+  //   decimales = importe * 100;
+
+  //   //char* importeChar = new char[decimales + 1];
+  //   //sprintf(importeChar, "%.2f", importe);
+
+  //   return divisasSimbolos[divisa] + to_string(enteros) + "." + to_string(decimales);
+  // }
+  //
+  void inicReporte(string nombreReporte) {
+    _textcolor(AMARILLO);
+    FechaHora::FechaHoy();
+    MnsgBox(16, 3, nombreReporte + "  Banco Haedo");
+    _textcolor(BLANCO);
+    cout << endl;
+  }
+
+  void Submenu_Cuentas(sMovimientoCA vrMovimientosCA[], int &cardMovCA, short divisa)
+  {
+    float importe, saldoCA = 0;
+
+    clrFullScr();
     // DesBloquearCambioTamaño()
 
-    Archivos::leerCA(vrMovimientosCA, cardMovCA); // Llamada de ejemplo a leerCA
-    Ordenar::ordXBurCA(vrMovimientosCA, cardMovCA);
+    inicReporte("Movimientos Caja de Ahorro");
 
-    Archivos::leerTD(vrMovimientosCA, vrMovimientosTD, cardMovCA, cardMovTD);
-    Archivos::leerTC(vrMovimientosCA, vrMovimientosTC, cardMovCA, cardMovTC);
-
-    FechaHora::FechaHoy();
-    MnsgBox(16,3,"Movimiento Caja de Ahorro Banco Haedo");
+    cout << Separador(75, '-')
+         << endl << left
+         << "Mov"
+         << " " << setw(10) << "Fecha"
+         << " T"
+         << " " << setw(25) << "Detalle"
+         << " " << setw(10) << "Debe"
+         << " " << setw(10) << "Haber"
+         << " Saldo"
+         << endl
+         << Separador(75, '-')
+         << endl;
     for (int i = 0; i < cardMovCA; i++)
     {
-      _gotoxy(5, i + 5);
-      _textcolor(BLANCO);
-      cout << "Movimiento " <<  setw(3) << i + 1 << ": "
-           << "Fecha: "     <<  setw(2) << vrMovimientosCA[i].dia << "/" << setw(2) << vrMovimientosCA[i].mes << "/" << vrMovimientosCA[i].anio
-           << " Tipo: "                 << vrMovimientosCA[i].tipoMov
-           << " Detalle: "  << setw(25) << vrMovimientosCA[i].detalle
-           << " Importe: "  << setw(10) << fixed << setprecision(2) << (divisa == 'P' ? vrMovimientosCA[i].importe : vrMovimientosCA[i].importe / 1500);
+      importe = convertirMonedas(vrMovimientosCA[i].importe, ARS, divisa);
+
+      //_gotoxy(5, i + 5);
+      cout  <<        right << setw(3)  << i + 1
+            << " "          << setw(2)  << vrMovimientosCA[i].dia << "-" << setw(2) << vrMovimientosCA[i].mes << "-" << setw(4)  << vrMovimientosCA[i].anio
+            << " "                      << vrMovimientosCA[i].tipoMov
+            << " " << left  << setw(25) << vrMovimientosCA[i].detalle;
+
+      if (vrMovimientosCA[i].tipoMov == DEBE) {
+        cout << " " << right << setw(10) << fixed << setprecision(2) << importe
+             << " " << string(10, ' ');
+        saldoCA -= importe;
+      } else {
+        cout << " " << string(10, ' ')
+             << " " << right << setw(10) << fixed << setprecision(2) << importe;
+        saldoCA += importe;
+      }
+
+      cout << " " << right << setw(10) << fixed << setprecision(2) << saldoCA
+           << " " << endl;
     }
+    cout << Separador(75, '-') << endl
+         << setw(62) << "Saldo: " << right << setw(3) << divisasSimbolos[divisa] << right << setw(10) << fixed << setprecision(2) << saldoCA << endl
+         << endl;
 
-    MnsgBox(2,_wherey()+2, "Pulse ENTER para volver al menú");
-    OcultarCursor();
-
-    cin.get();
-    MostrarCursor();
-    //BloquearCambioTamaño
+    pararFullScr();
   }
 
   void Menu_TransferirDinero()
@@ -953,18 +1146,11 @@ namespace Menues
       "CBU",
       "Celular"
     };
-    enum Metodos {
-      CBU,
-      CELULAR
-    };
 
-    limpiarEstadoTeclas();
-    limpiarBufferEntrada();
-    mostDeco();
+    inicMostDeco();
 
-    MnsgBox(10, 1, "Seleccione método de transferencia.");
+    mostRotuloMenu("Seleccione método de transferencia.");
     obtenerOpcionSeleccionada(opcionSeleccionada, opciones, NUM_OPCIONES);
-    limpiarEstadoTeclas();
     MnsgBox(2, 20, to_string(opcionSeleccionada));
 
     switch (opcionSeleccionada)
@@ -982,7 +1168,7 @@ namespace Menues
   {
     string destinatario;
     double monto;
-    mostDeco();
+    inicMostDeco();
 
     if (metodo == 'A')
       MnsgBox(10, 3, "Transferencia por CBU seleccionada.");
@@ -999,15 +1185,96 @@ namespace Menues
 
     MnsgBox(2,_wherey()+2, "Transferencia realizada");
 
-    MnsgBox(2, _wherey() + 2, "Pulse ENTER para volver al menú");
-    cin.get();
+    pararFullScr();
   }
 
+
+  void Menu_TarjetaDebito(sMovimientoTD vrMovimientosTD[], int &cardMovTD)
+  {
+    float totalTD = 0;
+    clrFullScr();
+    // DesBloquearCambioTamaño()
+    //
+    inicReporte("Movimientos Tarjeta Débito");
+
+    cout << Separador()
+         << endl
+         << "Mov."
+         << " " << setw(10) << "Fecha"
+         << " " << setw(25) << "Detalle"
+         << " " << "Importe" // << setw(10)
+         << endl
+         << Separador()
+         << endl;
+    for (int i = 0; i < cardMovTD; i++)
+    {
+      //_gotoxy(5, i + 5);
+      cout << setw(4) << i + 1
+            << " " << setw(2)  << vrMovimientosTD[i].dia << "-" << setw(2) << vrMovimientosTD[i].mes << "-" << setw(4)  << vrMovimientosTD[i].anio
+            << " " << setw(25) << vrMovimientosTD[i].detalle
+            << " " << setw(10)  << vrMovimientosTD[i].importe
+            << endl;
+      totalTD += vrMovimientosTD[i].importe;
+    }
+    cout  << Separador() << endl
+          << setw(42) << "Total TD: $"
+          << setw(10)  << totalTD
+          << endl
+          << Separador() << endl;
+
+    pararFullScr();
+  }
+
+  void Menu_TarjetaCredito(sMovimientoTC vrMovimientosTC[], int &cardMovTC)
+  {
+    float totalTC = 0;
+    clrFullScr();
+    // DesBloquearCambioTamaño()
+
+    inicReporte("Movimientos Tarjeta Crédito");
+
+    cout << Separador()
+         << endl
+         << "Mov."
+         << " " << setw(10) << "Fecha"
+         << " " << setw(25) << "Detalle"
+         << " " << setw(5)  << "Cuota"
+         << " " << "Importe" // << setw(10)
+         << endl
+         << Separador()
+         << endl;
+    for (int i = 0; i < cardMovTC; i++)
+    {
+      //_gotoxy(5, i + 5);
+      cout << setw(4) << i + 1
+            << " " << setw(2)  << vrMovimientosTC[i].dia << "-" << setw(2) << vrMovimientosTC[i].mes << "-" << setw(4)  << vrMovimientosTC[i].anio
+            << " " << setw(25) << vrMovimientosTC[i].detalle
+            << " " << setw(5)  << vrMovimientosTC[i].cuota
+            << " " << setw(10)  << vrMovimientosTC[i].importe
+            << endl;
+      totalTC += vrMovimientosTC[i].importe;
+    }
+    cout  << Separador() << endl
+          << setw(42) << "Total TC: $"
+          << setw(10) << totalTC
+          << endl
+          << Separador() << endl;
+
+    pararFullScr();
+  }
+
+  void Menu_Logout(bool &correr)
+  {
+    Pausa("Logout seleccionado.");
+    correr = false;
+    //exit(0);
+  }
 }
 
 void SistemaHomeBanking()
 {
   const int NUM_USUARIOS = 5;
+  bool correr;
   sUsuario vrUsuarios[NUM_USUARIOS] = {
       {12345678, "Juan Perez", 150398, "juanp", "clave123", 1234567890, "juanperez@gmail.com", "Calle 123", 987654321, 1122334455},
       {23456789, "Maria Gomez", 210701, "mariag", "clave456", 2345678901, "mariagomez@gmail.com", "Calle 456", 876543210, 2233445566},
@@ -1015,10 +1282,15 @@ void SistemaHomeBanking()
       {45678901, "Ana Torres", 300199, "anat", "clave012", 4567890123, "anatorres@gmail.com", "Calle 012", 654321098, 4455667788},
       {56789012, "Luis Ramirez", 120600, "luisr", "clave345", 5678901234, "luisramirez@gmail.com", "Calle 012", 543210987, 5566778899}
   };
+  sUsuario rUsuario;
+
   SetConsoleOutputCP(CP_UTF8); // Cambia codificación de salida a UTF-8. https://share.gemini.google/EpwcvMRWv77G
+
   BarraTitulo();
   // _window(0, 0, 80, 25);
-  Menues::Menu_Login(vrUsuarios);
+  Menues::Menu_Login(vrUsuarios, rUsuario, correr);
+  while(correr)
+    Menues::Menu_Principal(rUsuario, correr);
 }
 
 int main()

@@ -1,4 +1,4 @@
- 1  12 2026 D Compra supermercado           1250.50
+ 1 12 2026 D Compra supermercado           1250.50
  5  1 2026 H Extraccion cajero              500.00
 10  1 2026 D Pago servicios                2300.75
 15  1 2026 D Compra alimentos               850.20
