@@ -941,8 +941,8 @@ namespace Menues
       " [] Cuentas",
       "]>[ Transferir dinero",
       "[¯] Tarjetas",
-      "+$? Simulacion P.F.",
       "$>U Compra/Venta dolares",
+      "+$? Simulacion P.F.",
       "+$$ Inversion Plazo Fijo",
       "  ╦ Recargar",
       " +x Generar Token",
@@ -980,10 +980,10 @@ namespace Menues
         mostrarTexto("Tarjetas seleccionado.");
         break;
       case 3:
-        mostrarTexto("Simulación P.F. seleccionada.");
+        mostrarTexto("Compra/Venta de dólares seleccionado.");
         break;
       case 4:
-        mostrarTexto("Compra/Venta de dólares seleccionado.");
+        mostrarTexto("Simulación P.F. seleccionada.");
         break;
       case 5:
         mostrarTexto("Inversión Plazo Fijo seleccionado.");
@@ -1079,7 +1079,7 @@ namespace Menues
   //   return divisasSimbolos[divisa] + to_string(enteros) + "." + to_string(decimales);
   // }
   //
-  void inicReporte(string nombreReporte) {
+  void inicResumen(string nombreReporte) {
     _textcolor(AMARILLO);
     FechaHora::FechaHoy();
     MnsgBox(16, 3, nombreReporte + "  Banco Haedo");
@@ -1094,7 +1094,7 @@ namespace Menues
     clrFullScr();
     // DesBloquearCambioTamaño()
 
-    inicReporte("Movimientos Caja de Ahorro");
+    inicResumen("Movimientos Caja de Ahorro");
 
     cout << Separador(75, '-')
          << endl << left
@@ -1156,21 +1156,21 @@ namespace Menues
     switch (opcionSeleccionada)
     {
       case CBU:
-        Submenu_TransferirDinero('A');
+        Submenu_TransferirDinero(CBU);
         break;
       case CELULAR:
-        Submenu_TransferirDinero('C');
+        Submenu_TransferirDinero(CELULAR);
         break;
     }
   }
 
-  void Submenu_TransferirDinero(char metodo)
+  void Submenu_TransferirDinero(short metodo)
   {
     string destinatario;
     double monto;
     inicMostDeco();
 
-    if (metodo == 'A')
+    if (metodo == CBU)
       MnsgBox(10, 3, "Transferencia por CBU seleccionada.");
     else
       MnsgBox(10, 3, "Transferencia por Celular seleccionada.");
@@ -1195,7 +1195,7 @@ namespace Menues
     clrFullScr();
     // DesBloquearCambioTamaño()
     //
-    inicReporte("Movimientos Tarjeta Débito");
+    inicResumen("Movimientos Tarjeta Débito");
 
     cout << Separador()
          << endl
@@ -1231,7 +1231,7 @@ namespace Menues
     clrFullScr();
     // DesBloquearCambioTamaño()
 
-    inicReporte("Movimientos Tarjeta Crédito");
+    inicResumen("Movimientos Tarjeta Crédito");
 
     cout << Separador()
          << endl
