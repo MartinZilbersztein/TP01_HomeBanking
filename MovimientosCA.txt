@@ -1,3 +1,4 @@
+ 1  1 0000 H Dinero                     1000000.00
  1 12 2026 D Compra supermercado           1250.50
  5  1 2026 H Extraccion cajero              500.00
 10  1 2026 D Pago servicios                2300.75
@@ -18,3 +19,11 @@
 17  4 2026 D Supermercado                  4600.25
 23  4 2026 H Reintegro                     1200.00
 30  4 2026 D Compra varios                 3750.80
+26  7 2026 D Transferencia                 3000
+26  7 2026 D Transferencia                    300
+26  7 2026 D Recarga celular                   30
+26  7 2026 D Recarga SUBE                    3333
+26  7 2026 D Plazo Fijo                       100
+26  7 2026 D Fondo Inversion                30000
+26  7 2026 D Plazo fijo                       300
+26  7 2026 D Fondo inversion                  200
