@@ -3,7 +3,9 @@
 #include <ctime>
 #include <windows.h>
 #include <fstream>
+#include <sstream>
 #include <string>
+#include <limits>
 
 #define record struct
 
@@ -483,18 +485,29 @@ namespace EntradaSalida
   {
     Screen::MnsgBox(x, y, mensaje);
     getline(cin, entrada);
+    if (!cin)
+    {
+      cin.clear();
+      cin.ignore(numeric_limits<streamsize>::max(), '\n');
+      entrada.clear();
+    }
   }
   void obtenerEntrada(double &entrada, short x, short y, string mensaje)
   {
     Screen::MnsgBox(x, y, mensaje);
-    cin >> entrada;
-    cin.ignore();
+    while (!(cin >> entrada))
+    {
+      cin.clear();
+      cin.ignore(numeric_limits<streamsize>::max(), '\n');
+      Screen::MnsgBox(x, y, mensaje);
+    }
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
   }
   void obtenerEntrada(int &entrada, short x, short y, string mensaje)
   {
-    double entradaEntera;
+    double entradaEntera = 0;
     obtenerEntrada(entradaEntera, x, y, mensaje);
-    entrada = entradaEntera;
+    entrada = static_cast<int>(entradaEntera);
   }
 
   void limpiarEstadoTeclas()
@@ -527,16 +540,22 @@ namespace Archivos
 
     int i = 0;
 
-    while (archivo >> vrMovimientosCA[i].dia && i < maxMovCA)
+    while (i < maxMovCA && (archivo >> vrMovimientosCA[i].dia))
     {
       archivo >> vrMovimientosCA[i].mes;
       archivo >> vrMovimientosCA[i].anio;
       archivo >> vrMovimientosCA[i].tipoMov;
-      archivo.ignore();
-      archivo.get(vrMovimientosCA[i].detalle, 25);
-      archivo.ignore();
+      archivo.get(); // consume single separator space
+
+      char detalleTemp[27] = {0};
+      archivo.read(detalleTemp, 26);
+      detalleTemp[26] = '\0';
+      strncpy(vrMovimientosCA[i].detalle, detalleTemp, sizeof(vrMovimientosCA[i].detalle) - 1);
+      vrMovimientosCA[i].detalle[sizeof(vrMovimientosCA[i].detalle) - 1] = '\0';
+      archivo.get(); // consume separator space before importe
+
       archivo >> vrMovimientosCA[i].importe;
-      archivo.ignore();
+      archivo.ignore(numeric_limits<streamsize>::max(), '\n');
 
       i++;
     }
@@ -550,14 +569,31 @@ namespace Archivos
   {
     string nombreArchivo = "MovimientosCA.txt";
     ofstream archivo(nombreArchivo, ios::app);
+    if (!archivo)
+      return;
 
-    archivo << endl;
-    archivo << setw(2) << rMovimientoCA.dia;
-    archivo << " " << setw(2) << rMovimientoCA.mes;
-    archivo << " " << setw(4) << rMovimientoCA.anio;
-    archivo << " " << setw(1) << rMovimientoCA.tipoMov;
-    archivo << " " << left << setw(25) << rMovimientoCA.detalle << right;
-    archivo << " " << setw(10) << rMovimientoCA.importe;
+    archivo.seekp(0, ios::end);
+    if (archivo.tellp() > 0)
+      archivo << '\n';
+
+    string detalle(rMovimientoCA.detalle);
+    if (detalle.size() > 25)
+      detalle = detalle.substr(0, 25);
+    if (detalle.size() < 26)
+      detalle.append(26 - detalle.size(), ' ');
+
+    ostringstream ssImporte;
+    ssImporte << fixed << setprecision(2) << rMovimientoCA.importe;
+    string importeText = ssImporte.str();
+    if (importeText.size() < 10)
+      importeText = string(10 - importeText.size(), ' ') + importeText;
+
+    archivo << setw(2) << setfill(' ') << rMovimientoCA.dia;
+    archivo << ' ' << setw(2) << rMovimientoCA.mes;
+    archivo << ' ' << setw(4) << rMovimientoCA.anio;
+    archivo << ' ' << setw(1) << rMovimientoCA.tipoMov;
+    archivo << ' ' << detalle;
+    archivo << ' ' << importeText;
 
     archivo.close();
   }
@@ -578,21 +614,23 @@ namespace Archivos
 
   void leerTD(sMovimientoCA vrMovCA[], int &cardMovCA, int maxMovCA, sMovimientoTD vrMovTD[], int &cardMovTD)
   {
-    sMovimientoCA rMovimientoCA;
     string nombreArchivo = "MovimientosTD.txt";
     ifstream archivo(nombreArchivo);
 
     int i = 0;
 
-    while (archivo >> vrMovTD[i].dia && cardMovCA + i < maxMovCA)
+    while (i < 20 && cardMovCA + i < maxMovCA && (archivo >> vrMovTD[i].dia))
     {
       archivo >> vrMovTD[i].mes;
       archivo >> vrMovTD[i].anio;
-      archivo.ignore();
-      archivo.get(vrMovTD[i].detalle, 26);
-      archivo.ignore();
+      archivo.get();
+
+      archivo.read(vrMovTD[i].detalle, 25);
+      vrMovTD[i].detalle[25] = '\0';
+      archivo.get();
+
       archivo >> vrMovTD[i].importe;
-      archivo.ignore();
+      archivo.ignore(numeric_limits<streamsize>::max(), '\n');
 
       agregarMovimientoVRCA(
           vrMovCA, cardMovCA, i,
@@ -609,26 +647,27 @@ namespace Archivos
 
   void leerTC(sMovimientoCA vrMovCA[], int &cardMovCA, int maxMovCA, sMovimientoTC vrMovTC[], int &cardMovTC)
   {
-    sMovimientoCA rMovimientoCA;
     string nombreArchivo = "MovimientosTC.txt";
     ifstream archivo(nombreArchivo);
 
     int i = 0;
-    int posMovCA = cardMovCA;
 
-    while (archivo >> vrMovTC[i].dia && cardMovCA + i < maxMovCA)
+    while (i < 20 && cardMovCA + i < maxMovCA && (archivo >> vrMovTC[i].dia))
     {
       archivo >> vrMovTC[i].mes;
       archivo >> vrMovTC[i].anio;
-      archivo.ignore();
-      archivo.get(vrMovTC[i].detalle, 25);
-      archivo.ignore();
-      archivo.get(vrMovTC[i].cuota, 5);
-      archivo.ignore();
+      archivo.get();
+
+      archivo.read(vrMovTC[i].detalle, 25);
+      vrMovTC[i].detalle[25] = '\0';
+      archivo.get();
+
+      archivo.read(vrMovTC[i].cuota, 5);
+      vrMovTC[i].cuota[5] = '\0';
+      archivo.get();
 
       archivo >> vrMovTC[i].importe;
-
-      posMovCA = cardMovCA + i;
+      archivo.ignore(numeric_limits<streamsize>::max(), '\n');
 
       agregarMovimientoVRCA(
           vrMovCA, cardMovCA, i,
@@ -858,6 +897,9 @@ namespace Menues
   {
     inicMostDeco();
     mostRotuloMenu("Bienvenido/a " + nombre);
+    cardMovCA = 0;
+    cardMovTD = 0;
+    cardMovTC = 0;
     Archivos::leerCA(vrMovimientosCA, cardMovCA, maxMovCA);
     Archivos::leerTD(vrMovimientosCA, cardMovCA, maxMovCA, vrMovimientosTD, cardMovTD);
     Archivos::leerTC(vrMovimientosCA, cardMovCA, maxMovCA, vrMovimientosTC, cardMovTC);
@@ -1400,10 +1442,13 @@ namespace Menues
     else
       MnsgBox(10, 3, "Recarga SUBE");
 
-    if (tipoRecarga == 'C')
-      obtenerEntrada(dato, 10, 6, "Numero de celular: ");
-    else
-      obtenerEntrada(dato, 10, 6, "Numero de tarjeta SUBE: ");
+    do
+    {
+      if (tipoRecarga == 'C')
+        obtenerEntrada(dato, 10, 6, "Numero de celular: ");
+      else
+        obtenerEntrada(dato, 10, 6, "Numero de tarjeta SUBE: ");
+    } while (dato.empty());
 
     do
     {
@@ -1421,17 +1466,15 @@ namespace Menues
     movimiento.tipoMov = DEBE;
 
     if (tipoRecarga == 'C')
-      strcpy(movimiento.detalle, "Recarga celular");
+      strncpy(movimiento.detalle, "Recarga celular", sizeof(movimiento.detalle) - 1);
     else
-      strcpy(movimiento.detalle, "Recarga SUBE");
+      strncpy(movimiento.detalle, "Recarga SUBE", sizeof(movimiento.detalle) - 1);
+    movimiento.detalle[sizeof(movimiento.detalle) - 1] = '\0';
 
     movimiento.importe = importe;
 
-    vrMovimientosCA[cardMovCA] = movimiento;
-    cardMovCA++;
-
+    vrMovimientosCA[cardMovCA++] = movimiento;
     Ordenar::ordXBurCA(vrMovimientosCA, cardMovCA);
-
     Archivos::escribirCA(movimiento, ARS);
 
     MnsgBox(10, 12, "Recarga realizada correctamente.");
@@ -1640,8 +1683,9 @@ namespace Menues
       Sleep(1000);
     }
 
-    limpiarEstadoTeclas();
-    pararFullScr();
+    while (GetAsyncKeyState(VK_SPACE) & 0x8000)
+      Sleep(20);
+    MostrarCursor();
   }
 
   void Menu_MostrarCBU(sUsuario rUsuario)
