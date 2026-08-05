@@ -1,7 +1,6 @@
 #include <iostream>
 #include <iomanip>
 #include <ctime>
-// #include <string>
 #include <windows.h>
 #include <fstream>
 #include <string>
@@ -65,11 +64,11 @@ struct sUsuario
   int fechaNacimiento;
   string usuario;
   string clave;
-  long long numeroCelular; // 15 dígitos según E.164. Alternativa str15
+  long long numeroCelular;
   string correoElectronico;
   string direccion;
   int numeroCuentaCA;
-  long long CBU; // 22 dígitos según BCRA. Alternativa str22
+  long long CBU;
 };
 
 struct sMovimientoCA
@@ -109,67 +108,14 @@ short busBinVecDNI(sUsuario vec[], int dim, int dni)
   {
     int medio = izq + (der - izq) / 2;
     if (vec[medio].DNI == dni)
-      return medio; // Elemento encontrado
+      return medio;
     else if (vec[medio].DNI < dni)
-      izq = medio + 1; // Buscar en la mitad derecha
+      izq = medio + 1;
     else
-      der = medio - 1; // Buscar en la mitad izquierda
+      der = medio - 1;
   }
-  return -1; // Elemento no encontrado
+  return -1;
 }
-
-/* Según GPT, hay que agregar esto para que funcione _window
- *
- // LINEAS DE
- // LÍNEA OBLIGATORIA: Aplica los cambios visuales en la consola real
- // SetConsoleWindowInfo(hConsole, TRUE, &window);
-*/
-
-/* FUNCIONES BRINDADAS POR EL PROFESOR */
-
-// TP1-2026: HOME BANKING.
-
-// Módulos para manejo de la Consola Pantalla y Teclado.
-// Módulos para obtener la Fecha y Hora del Sistema.
-
-// Estos módulos deberán ser utilizados como herramientas productivas para el
-// TP1-HomeBanking.
-// El proceso es <<Interactivo>>, por lo que el código se duplica con respecto a
-// un proceso en <<Batch>> o por Lotes, debido a que en el proceso interactivo
-// además de contar con el código que resuelve el problema lógico, se requiere del
-// código de la interface con el usuario.
-// Los módulos se encuentran dentro del del namespace o espacio de nombres que
-// correspondan a los módulos relacionados con la pantalla y/o teclado es decir,
-// con la Consola. Así tenemos en esta entrega los namespace de <<Screen>> y
-// <<FechaHora>>. Cada grupo de trabajo podrá optar por utilizar otros namespace.
-// Podemos copiar el <<namespace Screen>> completo con todos los módulos allí
-// definidos; como así también el <<namespace FechaHora>>.
-// Los módulos dentro de un namespace que utilicemos deberán estar acompañados
-// por el ámbito al que pertenece. Por ejemplo: Screen::_gotoxy(x,y);
-// Screen::_textcolor(n); Screen::_clrscr(); Screen::MnsgBox(x,y,Mensaje);
-// Existe una forma de NO indicar el ámbito a la función definida, si utilizamos
-// la siguiente sentencia: <<using namespace Screen>>, entonces luego de esto
-// podemos utilizar esas funciones como se indica a continuación:
-// _gotoxy(x,y); _textcolor(n); _clrscr(); MnsgBox(x,y,Mensaje);
-// Los namespace tienen la siguiente sintaxis:
-
-// namespace NomEspacioNombre {
-//   Cabecera Mod1() {
-//     Cuerpo del Mod1;
-//   } // Fin Mod1
-//
-//   Cabecera Mod2() {
-//     Cuerpo del Mod2;
-//   } // Fin Mod2
-//   ...
-//   ...
-// } // Fin namespace Screen
-
-// Los nombres de módulos que inician con el caracter underscore o guión bajo o
-// subrayado, tienen el mismo nombre de los módulos de Borland, por lo que el
-// underscore indican que no son los módulos de Borland. El compilador a usar
-// NO es el de Borland sino el TDM-GCC-64 GNU-GCC Compiler
-// C++ Compiler x86_64-w64-mingw32-g++.exe
 
 namespace Screen
 {
@@ -177,10 +123,10 @@ namespace Screen
   void setConsoleColor(WORD colText, WORD colBack)
   {
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), colText + 16 * colBack);
-  } // setConsoleColor
+  }
 
   void _window(short izq, short sup, short der, short inf)
-  { // Clon de window()
+  {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(hConsole, &csbi);
@@ -190,10 +136,10 @@ namespace Screen
     window.Top = sup - 1;
     window.Right = der - 1;
     window.Bottom = inf - 1;
-  } // _window
+  }
 
   void _gotoxy(short x, short y)
-  { // Clon de gotoxy()
+  {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(hConsole, &csbi);
@@ -204,7 +150,7 @@ namespace Screen
     coord.Y = window.Top + y;
     if (coord.X <= window.Right && coord.Y <= window.Bottom)
       SetConsoleCursorPosition(hConsole, coord);
-  } // _gotoxy
+  }
 
   int _wherex()
   {
@@ -212,7 +158,7 @@ namespace Screen
     if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
       return csbi.dwCursorPosition.X;
     return -1;
-  } // _wherex
+  }
 
   int _wherey()
   {
@@ -220,16 +166,14 @@ namespace Screen
     if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
       return csbi.dwCursorPosition.Y;
     return -1;
-  } // _wherey
+  }
 
   void ActualizaColores(WORD colTextAct, WORD colBackAc)
   {
-    // Clon de textcolor() y textbackground() combinados.
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    // En Windows, el fondo se desplaza 4 bits a la izq. (se multiplica por 16)
     WORD atributo = colTextAct | (colBackAc << 4);
     SetConsoleTextAttribute(hConsole, atributo);
-  } // ActualizaColores
+  }
 
   WORD ObtenerColorTextoActual()
   {
@@ -238,11 +182,10 @@ namespace Screen
 
     if (GetConsoleScreenBufferInfo(hConsole, &csbi))
     {
-      // Aplica una máscara para quedarse únicamente con el color del texto
       return csbi.wAttributes & 0x000F;
     }
-    return 0; // Retorna 0 (negro) si hubo un error
-  } // ObtenerColorTextoActual
+    return 0;
+  }
 
   WORD ObtenerColorFondo()
   {
@@ -251,62 +194,54 @@ namespace Screen
 
     if (GetConsoleScreenBufferInfo(hConsole, &csbi))
     {
-      // El color de fondo está en los primeros 4 bits de la parte alta
-      // Por lo tanto, dividimos entre 16 para extraerlo
       return (csbi.wAttributes >> 4) & 0x0F;
     }
-    return -1; // Retorna -1 si ocurre un error
-  } // ObtenerColorFondo
+    return -1;
+  }
 
   void _textcolor(WORD color)
   {
     ActualizaColores(color, ObtenerColorFondo());
-  } // _textcolor
+  }
 
   void _textbackground(WORD color)
   {
     ActualizaColores(ObtenerColorTextoActual(), color);
-  } // _textbackground
+  }
 
   void _clrscr()
-  { // Clon de _clrscr() LOCALIZADO (Solo limpia área de la ventana)
+  {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(hConsole, &csbi);
     SMALL_RECT window = csbi.srWindow;
     DWORD escritos;
     WORD atributo = ObtenerColorTextoActual() | (ObtenerColorFondo() << 4);
-    // Calcular ancho y alto de nuestra ventana
     int ancho = window.Right - 3 - window.Left;
 
     window.Left += 2;
-    // Limpiar fila por fila dentro de los límites coordenados
     for (short y = window.Top + 2; y <= window.Bottom - 1; ++y)
     {
       COORD inicio_fila = {window.Left, y};
-      // Llena la fila actual con espacios en blanco
       FillConsoleOutputCharacter(hConsole, ' ', ancho, inicio_fila, &escritos);
-      // Aplica el color de fondo actual a esos espacios en blanco
       FillConsoleOutputAttribute(hConsole, atributo, ancho, inicio_fila, &escritos);
     }
-    _gotoxy(1, 1); // Igual a Borland, al limpiar, regresa a (1,1) relativo.
-  } // _clrscr
+    _gotoxy(1, 1);
+  }
 
   void _clreol()
   {
     COORD coord;
     DWORD escrito;
     HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_SCREEN_BUFFER_INFO info; // Obtener la posición actual del cursor
+    CONSOLE_SCREEN_BUFFER_INFO info;
     GetConsoleScreenBufferInfo(hStdOut, &info);
 
     coord = info.dwCursorPosition;
-    // Calcular cuantos caracteres faltan para el final de la línea
     int longitud = info.dwSize.X - coord.X;
-    // Sobrescribir con espacios y restaurar posición del cursor
     FillConsoleOutputCharacter(hStdOut, ' ', longitud, coord, &escrito);
     SetConsoleCursorPosition(hStdOut, coord);
-  } // _clreol
+  }
 
   void MnsgBox(short x, short y, string mensaje, char alinea, short ancho = 0)
   {
@@ -315,20 +250,20 @@ namespace Screen
       cout << setw(ancho) << left << mensaje;
     else
       cout << setw(ancho) << right << mensaje;
-  } // MnsgBox
+  }
 
   void MnsgBox(short x, short y, string mensaje)
   {
     _gotoxy(x, y);
     cout << mensaje;
-  } // MnsgBox
+  }
 
   void MnsgBox(short x, short y, short colorText, string mensaje)
   {
     _gotoxy(x, y);
     _textcolor(colorText);
     cout << mensaje;
-  } // MnsgBox
+  }
 
   void Marco(short x1, short y1, short x2, short y2, short colorTexto)
   {
@@ -346,30 +281,30 @@ namespace Screen
     MnsgBox(x2 - 1, y2 - 5, "╝");
     for (short i = 1; i < x2 - x1 - 1; i++)
       MnsgBox(x1 + i, y2 - 5, "═");
-  } // Marco
+  }
 
   string Separador(int ancho = 60, char car = '-')
   {
     return string(ancho, car);
-  } // Separador
+  }
 
   void OcultarCursor()
   {
     HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_CURSOR_INFO info;
     GetConsoleCursorInfo(consoleHandle, &info);
-    info.bVisible = FALSE; // Oculta el cursor
+    info.bVisible = FALSE;
     SetConsoleCursorInfo(consoleHandle, &info);
-  } // OcultarCursor
+  }
 
   void MostrarCursor()
   {
     HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_CURSOR_INFO info;
     GetConsoleCursorInfo(consoleHandle, &info);
-    info.bVisible = TRUE; // Muestra el cursor
+    info.bVisible = TRUE;
     SetConsoleCursorInfo(consoleHandle, &info);
-  } // MostrarCursor
+  }
 
   void Espera(short tiempo)
   {
@@ -379,12 +314,12 @@ namespace Screen
     Sleep(tiempo);
     _gotoxy(5, 20);
     _clreol();
-  } // Espera
+  }
 
   void BarraTitulo()
   {
     SetConsoleTitleA("Home Banking Haedo");
-  } // BarraTitulo
+  }
 
   void Pausa(string mensg = "")
   {
@@ -404,22 +339,21 @@ namespace Screen
       if (i == 16)
         i = 1;
     }
-  } // Pausa
+  }
 
   void BloquearCambioTamaño()
   {
-    HWND hwnd = GetConsoleWindow(); // Obtiene identificador de la ventana.
-    // Obtiene los estilos actuales de la ventana
+    HWND hwnd = GetConsoleWindow();
     LONG style = GetWindowLong(hwnd, GWL_STYLE);
-    style &= ~WS_MAXIMIZEBOX; // Quita botones de maximizar y redimensionar.
+    style &= ~WS_MAXIMIZEBOX;
     style &= ~WS_SIZEBOX;
-    SetWindowLong(hwnd, GWL_STYLE, style); // Aplica los nuevos estilos
-  } // BloquearCambioTamaño
+    SetWindowLong(hwnd, GWL_STYLE, style);
+  }
 
   string Left(str25 cad, short cant)
   {
     return string(cad, cant);
-  } // Left
+  }
 
   int MenuNavegar(char aMenu[][25], short lIni, short lFin, short cIni)
   {
@@ -428,7 +362,6 @@ namespace Screen
     OcultarCursor();
     MnsgBox(6, 20, "Flecha ↑ ↓ para moverse sobre el menú");
     MnsgBox(3, 21, "Tecla ESCAPE seleccionar la opción del menú");
-    // GoToXY(cIni,lIni);
     _gotoxy(cIni, lIni);
     while (not GetAsyncKeyState(VK_ESCAPE))
     {
@@ -479,12 +412,12 @@ namespace Screen
           cout << aMenu[Menu - lIni];
         }
       }
-    } // Fin While
+    }
     MostrarCursor();
     return Menu - lIni;
-  } // MenuNavegar
+  }
 
-} // Screen
+}
 
 namespace FechaHora
 {
@@ -499,7 +432,7 @@ namespace FechaHora
     mm = timeinfo->tm_min;
     ss = timeinfo->tm_sec;
     return timeinfo->tm_hour * 10000 + timeinfo->tm_min * 100 + timeinfo->tm_sec;
-  } // GetTime
+  }
 
   long GetDate(int &year, int &mes, int &dia, int &ds)
   {
@@ -513,7 +446,7 @@ namespace FechaHora
     dia = timeinfo->tm_mday;
     ds = 1 + timeinfo->tm_wday;
     return (1900 + timeinfo->tm_year) * 10000 + (1 + timeinfo->tm_mon) * 100 + timeinfo->tm_mday;
-  } // GetDate
+  }
 
   int FechaHoy()
   {
@@ -523,11 +456,9 @@ namespace FechaHora
     cout << "Dia: " << setw(2) << dia << " Mes: " << setw(2) << mes
          << " Año:" << ' ' << setw(2) << año << endl;
     return dia * 10000 + mes * 100 + año;
-  } // FechaHoy
+  }
 
-} // FechaHora
-
-/* CIERRE DE FUNCIONES BRINDADAS POR EL PROFESOR */
+}
 
 namespace EntradaSalida
 {
@@ -558,7 +489,8 @@ namespace EntradaSalida
     while (GetAsyncKeyState(VK_UP) & 0x8000 ||
            GetAsyncKeyState(VK_DOWN) & 0x8000 ||
            GetAsyncKeyState(VK_ESCAPE) & 0x8000 ||
-           GetAsyncKeyState(VK_RETURN) & 0x8000)
+           GetAsyncKeyState(VK_RETURN) & 0x8000 ||
+           GetAsyncKeyState(VK_SPACE) & 0x8000)
     {
       Sleep(20);
     }
@@ -587,9 +519,9 @@ namespace Archivos
       archivo >> vrMovimientosCA[i].mes;
       archivo >> vrMovimientosCA[i].anio;
       archivo >> vrMovimientosCA[i].tipoMov;
-      archivo.ignore(); // sacar espacio antes del detalle
+      archivo.ignore();
       archivo.get(vrMovimientosCA[i].detalle, 25);
-      archivo.ignore(); // sacar espacio después del detalle
+      archivo.ignore();
       archivo >> vrMovimientosCA[i].importe;
       archivo.ignore();
 
@@ -604,7 +536,7 @@ namespace Archivos
   void escribirCA(sMovimientoCA rMovimientoCA, char moneda)
   {
     string nombreArchivo = "MovimientosCA.txt";
-    ofstream archivo(nombreArchivo, ios::app); // Abrir en modo append para agregar al final del archivo
+    ofstream archivo(nombreArchivo, ios::app);
 
     archivo << endl;
     archivo << setw(2) << rMovimientoCA.dia;
@@ -628,12 +560,6 @@ namespace Archivos
     strcpy(rMovimientoCA.detalle, detalle);
     rMovimientoCA.importe = importe;
 
-    /*for (i = 0; i < maxMovCA && cardMovCA + i < maxMovCA; i++)
-    {
-      if (vrMovimientosCA[cardMovCA + i].dia == dia &&
-          vrMovimientosCA[cardMovCA + i].mes == mes &&
-          vrMovimientosCA*/
-
     vrMovimientosCA[cardMovCA + i] = rMovimientoCA;
   }
 
@@ -649,9 +575,9 @@ namespace Archivos
     {
       archivo >> vrMovTD[i].mes;
       archivo >> vrMovTD[i].anio;
-      archivo.ignore(); // sacar espacio antes del detalle
+      archivo.ignore();
       archivo.get(vrMovTD[i].detalle, 26);
-      archivo.ignore(); // sacar espacio después del detalle
+      archivo.ignore();
       archivo >> vrMovTD[i].importe;
       archivo.ignore();
 
@@ -688,7 +614,6 @@ namespace Archivos
       archivo.ignore();
 
       archivo >> vrMovTC[i].importe;
-      // archivo.ignore();
 
       posMovCA = cardMovCA + i;
 
@@ -704,16 +629,6 @@ namespace Archivos
     cardMovTC = i;
     cardMovCA += i;
   }
-
-  /* void AgregarRegistroCA(sMovimientoCA vrMovimientosCA[], int &card, char moneda)
-  {
-
-  }
-
-  void Cargar(sMovimientoCA vrMovimientosCA[], int &card, char moneda)
-  {
-
-  } */
 }
 
 namespace Ordenar
@@ -835,15 +750,20 @@ namespace Menues
   void Submenu_TarjetaCredito(sMovimientoTC vrMovimientosTC[], int &cardMovTC);
   void Menu_SimulacionPF();
   void Menu_Inversiones(sMovimientoCA vrMovimientosCA[], int &cardMovCA);
-
   void Submenu_PlazoFijo(sMovimientoCA vrMovimientosCA[], int &cardMovCA);
-
   void Submenu_FondoInversion(sMovimientoCA vrMovimientosCA[], int &cardMovCA);
   void Menu_Recargas(sMovimientoCA vrMovimientosCA[], int &cardMovCA);
   void Submenu_Recarga(char tipoRecarga, sMovimientoCA vrMovimientosCA[], int &cardMovCA);
   void Menu_MostrarCBU(sUsuario rUsuario);
   void Menu_DatosPersonales(sUsuario rUsuario);
+  void Menu_ModificarClave(sUsuario &rUsuario);
+  void Submenu_Deposito(sMovimientoCA vrMovimientosCA[], int &cardMovCA);
+  void Menu_CrearCuenta(sUsuario &rUsuario);
+  void Menu_MisCuentas(sUsuario rUsuario);
+  void Menu_Compras(sMovimientoCA vrMovimientosCA[], int &cardMovCA);
   void Menu_Logout(bool &correr);
+  void Menu_CompraVentaDolares(sMovimientoCA vrMovimientosCA[], int &cardMovCA);
+  void Menu_GenerarToken();
 
   void clrFullScr()
   {
@@ -853,18 +773,15 @@ namespace Menues
   void pararFullScr()
   {
     MnsgBox(2, _wherey() + 2, "Oprima la tecla ESPACIO para continuar...");
-    GetAsyncKeyState(VK_SPACE);
+    limpiarEstadoTeclas();
     while (not GetAsyncKeyState(VK_SPACE))
-      Sleep(1000);
-    // BloquearCambioTamaño
+      Sleep(100);
   }
 
   void inicMostDeco()
   {
     limpiarEstadoTeclas();
     limpiarBufferEntrada();
-    //_textbackground(NEGRO);
-    //_clrscr();
     clrFullScr();
     _textbackground(AMARILLO);
     Marco(0, 0, COLS - 2, LINEAS - 2 + 4, AZUL_CLARO);
@@ -893,7 +810,6 @@ namespace Menues
     int contador = 0, seEncontro, dni;
     string usuario, clave;
     bool esValido = false;
-    // Screen::_gotoxy(2,2);
 
     do
     {
@@ -910,7 +826,7 @@ namespace Menues
 
       if (!esValido)
         MnsgBox(2, 12, "Datos incorrectos. Intento " + to_string(contador) + "/" + to_string(MAX_INTENTOS));
-      Espera(3000); // Espera 3 segundos antes de permitir otro intento
+      Espera(3000);
     } while (contador < MAX_INTENTOS && !esValido);
 
     if (esValido)
@@ -946,7 +862,7 @@ namespace Menues
     const int MAX_MOV_TC = 20;
     const int MAX_MOV_CA = MAX_MOV_TD + MAX_MOV_TC + 25;
     int opcionSeleccionada, cardMovCA, cardMovTD, cardMovTC;
-    sMovimientoCA vrMovimientosCA[MAX_MOV_CA]; // Array para almacenar los movimientos leídos
+    sMovimientoCA vrMovimientosCA[MAX_MOV_CA];
     sMovimientoTD vrMovimientosTD[MAX_MOV_TD];
     sMovimientoTC vrMovimientosTC[MAX_MOV_TC];
 
@@ -976,9 +892,6 @@ namespace Menues
                       vrMovimientosTD, cardMovTD,
                       vrMovimientosTC, cardMovTC);
 
-    //_window(0, 0, 80, 52);
-    // void _window(short izq, short sup, short der, short inf)
-
     obtenerOpcionSeleccionada(opcionSeleccionada, opciones, NUM_OPCIONES);
     switch (opcionSeleccionada)
     {
@@ -992,7 +905,7 @@ namespace Menues
       Menu_Tarjetas(vrMovimientosTD, cardMovTD, vrMovimientosTC, cardMovTC);
       break;
     case 3:
-      mostrarTexto("Compra/Venta de dólares seleccionado.");
+      Menu_CompraVentaDolares(vrMovimientosCA, cardMovCA);
       break;
     case 4:
       Menu_SimulacionPF();
@@ -1004,35 +917,37 @@ namespace Menues
       Menu_Recargas(vrMovimientosCA, cardMovCA);
       break;
     case 7:
-      mostrarTexto("Generar Token seleccionado.");
+      Menu_GenerarToken();
       break;
     case 8:
       Menu_MostrarCBU(rUsuario);
       break;
     case 9:
-      mostrarTexto("Mis Cuentas seleccionado.");
+      Menu_MisCuentas(rUsuario);
       break;
     case 10:
       Menu_DatosPersonales(rUsuario);
       break;
     case 11:
-      mostrarTexto("Modificar clave seleccionado.");
+      Menu_ModificarClave(rUsuario);
       break;
     case 12:
-      mostrarTexto("Movimientos de Caja de Ahorros seleccionado.");
+      Menu_Cuentas(vrMovimientosCA, cardMovCA);
       break;
     case 13:
+      Submenu_TarjetaDebito(vrMovimientosTD, cardMovTD);
       break;
     case 14:
+      Submenu_TarjetaCredito(vrMovimientosTC, cardMovTC);
       break;
     case 15:
-      mostrarTexto("Crear nueva cuenta seleccionado.");
+      Menu_CrearCuenta(rUsuario);
       break;
     case 16:
-      mostrarTexto("Depósito seleccionado.");
+      Submenu_Deposito(vrMovimientosCA, cardMovCA);
       break;
     case 17:
-      mostrarTexto("Compras seleccionado.");
+      Menu_Compras(vrMovimientosCA, cardMovCA);
       break;
     case 18:
       Menu_Logout(correr);
@@ -1069,24 +984,6 @@ namespace Menues
     return importeSalida;
   }
 
-  // string fmtImporte(float importe, short divisa)
-  // {
-  //   //string importeStr = to_string(importe);
-  //   //char* importeChar = new char[importeStr.length() + 1];
-  //   //strcpy(importeChar, importeStr.c_str());
-  //   //strcat(divisasSimbolos[divisa]);
-  //   short enteros, decimales;
-  //   div_t
-
-  //   enteros   = (int)importe;
-  //   decimales = importe * 100;
-
-  //   //char* importeChar = new char[decimales + 1];
-  //   //sprintf(importeChar, "%.2f", importe);
-
-  //   return divisasSimbolos[divisa] + to_string(enteros) + "." + to_string(decimales);
-  // }
-  //
   void inicResumen(string nombreReporte)
   {
     _textcolor(AMARILLO);
@@ -1101,7 +998,6 @@ namespace Menues
     float importe, saldoCA = 0;
 
     clrFullScr();
-    // DesBloquearCambioTamaño()
 
     inicResumen("Movimientos Caja de Ahorro");
 
@@ -1122,7 +1018,6 @@ namespace Menues
     {
       importe = convertirMonedas(vrMovimientosCA[i].importe, ARS, divisa);
 
-      //_gotoxy(5, i + 5);
       cout << right << setw(3) << i + 1
            << " " << setw(2) << vrMovimientosCA[i].dia << "-" << setw(2) << vrMovimientosCA[i].mes << "-" << setw(4) << vrMovimientosCA[i].anio
            << " " << vrMovimientosCA[i].tipoMov
@@ -1227,6 +1122,7 @@ namespace Menues
 
     pararFullScr();
   }
+
   void Menu_Tarjetas(sMovimientoTD vrMovimientosTD[], int &cardMovTD, sMovimientoTC vrMovimientosTC[], int &cardMovTC)
   {
     const int NUM_OPCIONES = 2;
@@ -1256,8 +1152,7 @@ namespace Menues
   {
     float totalTD = 0;
     clrFullScr();
-    // DesBloquearCambioTamaño()
-    //
+
     inicResumen("Movimientos Tarjeta Débito");
 
     cout << Separador()
@@ -1265,13 +1160,12 @@ namespace Menues
          << "Mov."
          << " " << setw(10) << "Fecha"
          << " " << setw(25) << "Detalle"
-         << " " << "Importe" // << setw(10)
+         << " " << "Importe"
          << endl
          << Separador()
          << endl;
     for (int i = 0; i < cardMovTD; i++)
     {
-      //_gotoxy(5, i + 5);
       cout << setw(4) << i + 1
            << " " << setw(2) << vrMovimientosTD[i].dia << "-" << setw(2) << vrMovimientosTD[i].mes << "-" << setw(4) << vrMovimientosTD[i].anio
            << " " << setw(25) << vrMovimientosTD[i].detalle
@@ -1292,7 +1186,6 @@ namespace Menues
   {
     float totalTC = 0;
     clrFullScr();
-    // DesBloquearCambioTamaño()
 
     inicResumen("Movimientos Tarjeta Crédito");
 
@@ -1302,13 +1195,12 @@ namespace Menues
          << " " << setw(10) << "Fecha"
          << " " << setw(25) << "Detalle"
          << " " << setw(5) << "Cuota"
-         << " " << "Importe" // << setw(10)
+         << " " << "Importe"
          << endl
          << Separador()
          << endl;
     for (int i = 0; i < cardMovTC; i++)
     {
-      //_gotoxy(5, i + 5);
       cout << setw(4) << i + 1
            << " " << setw(2) << vrMovimientosTC[i].dia << "-" << setw(2) << vrMovimientosTC[i].mes << "-" << setw(4) << vrMovimientosTC[i].anio
            << " " << setw(25) << vrMovimientosTC[i].detalle
@@ -1376,7 +1268,6 @@ namespace Menues
       obtenerEntrada(dias, 2, 6, "Plazo (dias): ");
     } while (dias <= 0);
 
-    // Tasa anual fija de ejemplo (35%)
     tasaAnual = 35;
 
     interes = capital * (tasaAnual / 100.0) * dias / 365.0;
@@ -1416,6 +1307,7 @@ namespace Menues
       break;
     }
   }
+
   void Submenu_PlazoFijo(sMovimientoCA vrMovimientosCA[], int &cardMovCA)
   {
     double monto;
@@ -1483,6 +1375,7 @@ namespace Menues
 
     pararFullScr();
   }
+
   void Submenu_Recarga(char tipoRecarga,
                        sMovimientoCA vrMovimientosCA[],
                        int &cardMovCA)
@@ -1533,6 +1426,310 @@ namespace Menues
 
     MnsgBox(10, 12, "Recarga realizada correctamente.");
 
+    pararFullScr();
+  }
+
+  void Menu_ModificarClave(sUsuario &rUsuario)
+  {
+    string nuevaClave, claveActual;
+    inicMostDeco();
+    mostRotuloMenu("Modificar Clave");
+
+    obtenerEntrada(claveActual, 2, 5, "Ingrese clave actual: ");
+    if (claveActual == rUsuario.clave)
+    {
+      obtenerEntrada(nuevaClave, 2, 7, "Ingrese nueva clave : ");
+      if (nuevaClave != "")
+      {
+        rUsuario.clave = nuevaClave;
+        MnsgBox(2, 10, "Clave modificada con éxito.");
+      }
+      else
+      {
+        MnsgBox(2, 10, "La clave no puede estar vacía.");
+      }
+    }
+    else
+    {
+      MnsgBox(2, 10, "Clave actual incorrecta.");
+    }
+    pararFullScr();
+  }
+
+  void Submenu_Deposito(sMovimientoCA vrMovimientosCA[], int &cardMovCA)
+  {
+    double monto;
+
+    inicMostDeco();
+
+    mostRotuloMenu("DEPOSITO");
+
+    do
+    {
+      obtenerEntrada(monto, 2, 5, "Monto a depositar: $");
+    } while (monto <= 0);
+
+    sMovimientoCA mov;
+
+    int anio, mes, dia, ds;
+    FechaHora::GetDate(anio, mes, dia, ds);
+
+    mov.dia = dia;
+    mov.mes = mes;
+    mov.anio = anio;
+    mov.tipoMov = 'H';
+
+    strcpy(mov.detalle, "Deposito");
+    mov.importe = monto;
+
+    vrMovimientosCA[cardMovCA++] = mov;
+    Ordenar::ordXBurCA(vrMovimientosCA, cardMovCA);
+    Archivos::escribirCA(mov, ARS);
+
+    MnsgBox(2, 9, "Deposito realizado correctamente.");
+
+    pararFullScr();
+  }
+
+  void Menu_CrearCuenta(sUsuario &rUsuario)
+  {
+    const int NUM_OPCIONES_TIPO = 2;
+    int tipoOpcion;
+    str24 opcionesTipo[NUM_OPCIONES_TIPO] = {
+        "CA (Caja de Ahorro)",
+        "CC (Cuenta Corriente)"};
+
+    inicMostDeco();
+    mostRotuloMenu("CREAR NUEVA CUENTA - TIPO");
+    obtenerOpcionSeleccionada(tipoOpcion, opcionesTipo, NUM_OPCIONES_TIPO);
+
+    const int NUM_OPCIONES_MONEDA = 2;
+    int monedaOpcion;
+    str24 opcionesMoneda[NUM_OPCIONES_MONEDA] = {
+        "Pesos ($)",
+        "Dólares (u$s)"};
+
+    inicMostDeco();
+    mostRotuloMenu("CREAR NUEVA CUENTA - MONEDA");
+    obtenerOpcionSeleccionada(monedaOpcion, opcionesMoneda, NUM_OPCIONES_MONEDA);
+
+    inicMostDeco();
+    mostRotuloMenu("CREAR NUEVA CUENTA");
+
+    int correlativo = (rUsuario.DNI % 90) + 10;
+    string nroCuentaCreada = "009-00000" + to_string(correlativo);
+
+    MnsgBox(2, 4, "Titular: " + rUsuario.nombre);
+    MnsgBox(2, 6, "Tipo de cuenta: " + string(tipoOpcion == 0 ? "CA" : "CC"));
+    MnsgBox(2, 7, "Moneda        : " + string(monedaOpcion == 0 ? "Pesos ($)" : "Dólares (u$s)"));
+
+    MnsgBox(2, 10, "Cuenta creada nro. " + nroCuentaCreada + ",");
+
+    pararFullScr();
+  }
+
+  void Menu_MisCuentas(sUsuario rUsuario)
+  {
+    clrFullScr();
+    inicResumen("Mis Cuentas - Datos Bancarios");
+
+    cout << Separador(78, '-')
+         << endl
+         << left
+         << setw(16) << "Nro. Cta"
+         << setw(8) << "Tipo"
+         << setw(10) << "Moneda"
+         << setw(15) << "Saldo"
+         << setw(15) << "Estado"
+         << endl
+         << Separador(78, '-')
+         << endl;
+
+    cout << left
+         << setw(16) << rUsuario.numeroCuentaCA
+         << setw(8) << "CA"
+         << setw(10) << "$"
+         << right << setw(10) << fixed << setprecision(2) << 150000.00
+         << "     " << left << setw(15) << "Activa"
+         << endl;
+
+    cout << left
+         << setw(16) << rUsuario.numeroCuentaCA + 1
+         << setw(8) << "CC"
+         << setw(10) << "u$s"
+         << right << setw(10) << fixed << setprecision(2) << 450.00
+         << "     " << left << setw(15) << "Activa"
+         << endl;
+
+    cout << Separador(78, '-') << endl;
+    pararFullScr();
+  }
+
+  void Menu_Compras(sMovimientoCA vrMovimientosCA[], int &cardMovCA)
+  {
+    string comercio;
+    double monto;
+
+    inicMostDeco();
+    mostRotuloMenu("COMPRAS");
+
+    do
+    {
+      obtenerEntrada(comercio, 2, 5, "Establecimiento / Comercio: ");
+    } while (comercio == "");
+
+    do
+    {
+      obtenerEntrada(monto, 2, 7, "Monto de la compra: $");
+    } while (monto <= 0);
+
+    sMovimientoCA mov;
+    int anio, mes, dia, ds;
+    FechaHora::GetDate(anio, mes, dia, ds);
+
+    mov.dia = dia;
+    mov.mes = mes;
+    mov.anio = anio;
+    mov.tipoMov = DEBE;
+
+    string detalleStr = "Compra: " + comercio;
+    if (detalleStr.length() > 25)
+      detalleStr = detalleStr.substr(0, 25);
+    strcpy(mov.detalle, detalleStr.c_str());
+    mov.importe = monto;
+
+    vrMovimientosCA[cardMovCA++] = mov;
+    Ordenar::ordXBurCA(vrMovimientosCA, cardMovCA);
+    Archivos::escribirCA(mov, ARS);
+
+    MnsgBox(2, 10, "Compra registrada correctamente.");
+
+    pararFullScr();
+  }
+
+  void Menu_CompraVentaDolares(sMovimientoCA vrMovimientosCA[], int &cardMovCA)
+  {
+    const int NUM_OPCIONES = 2;
+    int opcionSeleccionada;
+    str24 opciones[NUM_OPCIONES] = {
+        "Comprar Dólares",
+        "Vender Dólares"};
+
+    inicMostDeco();
+    mostRotuloMenu("COMPRA / VENTA DE DÓLARES");
+    obtenerOpcionSeleccionada(opcionSeleccionada, opciones, NUM_OPCIONES);
+
+    double monto;
+    inicMostDeco();
+    if (opcionSeleccionada == 0)
+    {
+      mostRotuloMenu("COMPRAR DÓLARES");
+      do
+      {
+        obtenerEntrada(monto, 2, 5, "Ingrese el monto en ARS: $");
+      } while (monto <= 0);
+
+      sMovimientoCA mov;
+      int anio, mes, dia, ds;
+      FechaHora::GetDate(anio, mes, dia, ds);
+
+      mov.dia = dia;
+      mov.mes = mes;
+      mov.anio = anio;
+      mov.tipoMov = DEBE;
+      strcpy(mov.detalle, "Compra Dolares");
+      mov.importe = monto;
+
+      vrMovimientosCA[cardMovCA++] = mov;
+      Ordenar::ordXBurCA(vrMovimientosCA, cardMovCA);
+      Archivos::escribirCA(mov, ARS);
+    }
+    else
+    {
+      mostRotuloMenu("VENDER DÓLARES");
+      do
+      {
+        obtenerEntrada(monto, 2, 5, "Ingrese el monto en USD: u$d ");
+      } while (monto <= 0);
+
+      sMovimientoCA mov;
+      int anio, mes, dia, ds;
+      FechaHora::GetDate(anio, mes, dia, ds);
+
+      mov.dia = dia;
+      mov.mes = mes;
+      mov.anio = anio;
+      mov.tipoMov = HABER;
+      strcpy(mov.detalle, "Venta Dolares");
+      mov.importe = monto * COTIZACION_USD;
+
+      vrMovimientosCA[cardMovCA++] = mov;
+      Ordenar::ordXBurCA(vrMovimientosCA, cardMovCA);
+      Archivos::escribirCA(mov, ARS);
+    }
+
+    MnsgBox(2, 9, "Operación realizada correctamente.");
+    pararFullScr();
+  }
+
+  void Menu_GenerarToken()
+  {
+    inicMostDeco();
+    mostRotuloMenu("GENERAR TOKEN");
+
+    MnsgBox(5, 18, "Presione ESPACIO para regresar al Menú Principal.");
+
+    bool salir = false;
+    while (!salir)
+    {
+      int token = rand() % 900000 + 100000;
+
+      MnsgBox(10, 7, "Token actual: ");
+      _textcolor(AMARILLO_CLARO);
+      MnsgBox(25, 7, to_string(token));
+      _textcolor(BLANCO_BRILLANTE);
+
+      int totalBloques = 30;
+      MnsgBox(10, 9, "[");
+      MnsgBox(11 + totalBloques, 9, "]");
+
+      for (int porcentaje = 10; porcentaje <= 100; porcentaje += 10)
+      {
+        if (GetAsyncKeyState(VK_SPACE) || GetAsyncKeyState(VK_ESCAPE))
+        {
+          salir = true;
+          break;
+        }
+
+        int bloques = (porcentaje * totalBloques) / 100;
+
+        _textcolor(BLANCO_BRILLANTE);
+        string barra = "";
+        for (int b = 0; b < totalBloques; b++)
+        {
+          if (b < bloques)
+            barra += "█";
+          else
+            barra += " ";
+        }
+        MnsgBox(11, 9, barra);
+
+        string porcStr = to_string(porcentaje) + "%";
+        if (porcentaje < 100)
+          porcStr = " " + porcStr;
+
+        MnsgBox(13 + totalBloques, 9, porcStr);
+
+        Sleep(900);
+      }
+
+      if (salir)
+        break;
+
+      Sleep(1000);
+    }
+
+    limpiarEstadoTeclas();
     pararFullScr();
   }
 
@@ -1609,9 +1806,16 @@ namespace Menues
 
   void Menu_Logout(bool &correr)
   {
-    Pausa("Logout seleccionado.");
+    inicMostDeco();
+
+    MnsgBox(10, 5, "Sesión Cerrada");
+    MnsgBox(10, 7, "Gracias por operar con el");
+    _textcolor(VERDE_CLARO);
+    MnsgBox(10, 8, "Banco Haedo");
+    _textcolor(BLANCO_BRILLANTE);
+
+    pararFullScr();
     correr = false;
-    // exit(0);
   }
 }
 
@@ -1627,10 +1831,9 @@ void SistemaHomeBanking()
       {56789012, "Luis Ramirez", 120600, "luisr", "clave345", 5678901234, "luisramirez@gmail.com", "Calle 012", 543210987, 5566778899}};
   sUsuario rUsuario;
 
-  SetConsoleOutputCP(CP_UTF8); // Cambia codificación de salida a UTF-8. https://share.gemini.google/EpwcvMRWv77G
+  SetConsoleOutputCP(CP_UTF8);
 
   BarraTitulo();
-  // _window(0, 0, 80, 25);
   Menues::Menu_Login(vrUsuarios, rUsuario, correr);
   while (correr)
     Menues::Menu_Principal(rUsuario, correr);
