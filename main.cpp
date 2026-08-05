@@ -100,6 +100,13 @@ struct sMovimientoTC
   float importe;
 };
 
+struct sFec
+{
+  int dia;
+  int mes;
+  int anio;
+};
+
 short busBinVecDNI(sUsuario vec[], int dim, int dni)
 {
   int izq = 0;
@@ -448,6 +455,12 @@ namespace FechaHora
     return (1900 + timeinfo->tm_year) * 10000 + (1 + timeinfo->tm_mon) * 100 + timeinfo->tm_mday;
   }
 
+  void GetDate(sFec &fecha)
+  {
+    int ds;
+    GetDate(fecha.anio, fecha.mes, fecha.dia, ds);
+  }
+
   int FechaHoy()
   {
     int año, mes, dia, dsem;
@@ -743,6 +756,7 @@ namespace Menues
   void Menu_Principal(sUsuario rUsuario, bool &correr);
   void Menu_Cuentas(sMovimientoCA vrMovimientosCA[], int cardMovCA);
   void Submenu_Cuentas(sMovimientoCA vrMovimientosCA[], int &cardMovCA, short divisa);
+  void Menu_ListarMovimientos(sMovimientoCA vrMovimientosCA[], int cardMovCA, sMovimientoTD vrMovimientosTD[], int cardMovTD, sMovimientoTC vrMovimientosTC[], int cardMovTC);
   void Menu_TransferirDinero(sMovimientoCA vrMovimientosCA[], int &cardMovCA);
   void Submenu_TransferirDinero(char metodo, sMovimientoCA vrMovimientosCA[], int &cardMovCA);
   void Menu_Tarjetas(sMovimientoTD vrMovimientosTD[], int &cardMovTD, sMovimientoTC vrMovimientosTC[], int &cardMovTC);
@@ -854,7 +868,7 @@ namespace Menues
 
   void Menu_Principal(sUsuario rUsuario, bool &correr)
   {
-    const int NUM_OPCIONES = 19;
+    const int NUM_OPCIONES = 15;
     const int MAX_MOV_TD = 20;
     const int MAX_MOV_TC = 20;
     const int MAX_MOV_CA = MAX_MOV_TD + MAX_MOV_TC + 25;
@@ -864,9 +878,8 @@ namespace Menues
     sMovimientoTC vrMovimientosTC[MAX_MOV_TC];
 
     str24 opciones[NUM_OPCIONES] = {
-        " [] Cuentas",
+        " [] Listar movimientos",
         "]>[ Transferir dinero",
-        "[¯] Tarjetas",
         "$>U Compra/Venta dolares",
         "+$? Simulacion P.F.",
         "+$$ Inversion Plazo Fijo",
@@ -876,9 +889,6 @@ namespace Menues
         " [] Mis Cuentas",
         "()/ Datos personales",
         "/** Modificar clave",
-        "<O> Movimientos CA",
-        "<O> Movimientos TD",
-        "<O> Movimientos TC",
         "+[] Crear nueva cuenta",
         ">[] Depósito",
         "|^| Compras",
@@ -893,60 +903,48 @@ namespace Menues
     switch (opcionSeleccionada)
     {
     case 0:
-      Menu_Cuentas(vrMovimientosCA, cardMovCA);
+      Menu_ListarMovimientos(vrMovimientosCA, cardMovCA, vrMovimientosTD, cardMovTD, vrMovimientosTC, cardMovTC);
       break;
     case 1:
       Menu_TransferirDinero(vrMovimientosCA, cardMovCA);
       break;
     case 2:
-      Menu_Tarjetas(vrMovimientosTD, cardMovTD, vrMovimientosTC, cardMovTC);
-      break;
-    case 3:
       Menu_CompraVentaDolares(vrMovimientosCA, cardMovCA);
       break;
-    case 4:
+    case 3:
       Menu_SimulacionPF();
       break;
-    case 5:
+    case 4:
       Menu_Inversiones(vrMovimientosCA, cardMovCA);
       break;
-    case 6:
+    case 5:
       Menu_Recargas(vrMovimientosCA, cardMovCA);
       break;
-    case 7:
+    case 6:
       Menu_GenerarToken();
       break;
-    case 8:
+    case 7:
       Menu_MostrarCBU(rUsuario);
       break;
-    case 9:
+    case 8:
       Menu_MisCuentas(rUsuario);
       break;
-    case 10:
+    case 9:
       Menu_DatosPersonales(rUsuario);
       break;
-    case 11:
+    case 10:
       Menu_ModificarClave(rUsuario);
       break;
-    case 12:
-      Menu_Cuentas(vrMovimientosCA, cardMovCA);
-      break;
-    case 13:
-      Submenu_TarjetaDebito(vrMovimientosTD, cardMovTD);
-      break;
-    case 14:
-      Submenu_TarjetaCredito(vrMovimientosTC, cardMovTC);
-      break;
-    case 15:
+    case 11:
       Menu_CrearCuenta(rUsuario);
       break;
-    case 16:
+    case 12:
       Submenu_Deposito(vrMovimientosCA, cardMovCA);
       break;
-    case 17:
+    case 13:
       Menu_Compras(vrMovimientosCA, cardMovCA);
       break;
-    case 18:
+    case 14:
       Menu_Logout(correr);
       break;
     }
@@ -967,6 +965,33 @@ namespace Menues
 
     MnsgBox(2, 20, to_string(opcionSeleccionada));
     Submenu_Cuentas(vrMovimientosCA, cardMovCA, opcionSeleccionada);
+  }
+
+  void Menu_ListarMovimientos(sMovimientoCA vrMovimientosCA[], int cardMovCA, sMovimientoTD vrMovimientosTD[], int cardMovTD, sMovimientoTC vrMovimientosTC[], int cardMovTC)
+  {
+    const int NUM_OPCIONES = 3;
+    int opcionSeleccionada;
+    str24 opciones[NUM_OPCIONES] = {
+        "Caja de ahorro",
+        "Tarjeta Débito",
+        "Tarjeta Crédito"};
+
+    inicMostDeco();
+    mostRotuloMenu("Listar Movimientos");
+    obtenerOpcionSeleccionada(opcionSeleccionada, opciones, NUM_OPCIONES);
+
+    switch (opcionSeleccionada)
+    {
+    case 0:
+      Menu_Cuentas(vrMovimientosCA, cardMovCA);
+      break;
+    case 1:
+      Submenu_TarjetaDebito(vrMovimientosTD, cardMovTD);
+      break;
+    case 2:
+      Submenu_TarjetaCredito(vrMovimientosTC, cardMovTC);
+      break;
+    }
   }
 
   float convertirMonedas(float importeEntrada, short divisaEntrada, short divisaSalida)
@@ -1096,14 +1121,14 @@ namespace Menues
       obtenerEntrada(monto, 10, 9, "Ingrese el monto a transferir: ");
     } while (monto <= 0);
 
-    int anio, mes, dia, ds;
-    FechaHora::GetDate(anio, mes, dia, ds);
+    sFec fecha;
+    FechaHora::GetDate(fecha);
 
     sMovimientoCA movimiento;
 
-    movimiento.dia = dia;
-    movimiento.mes = mes;
-    movimiento.anio = anio;
+    movimiento.dia = fecha.dia;
+    movimiento.mes = fecha.mes;
+    movimiento.anio = fecha.anio;
     movimiento.tipoMov = DEBE;
 
     strcpy(movimiento.detalle, "Transferencia");
@@ -1320,12 +1345,12 @@ namespace Menues
 
     sMovimientoCA mov;
 
-    int anio, mes, dia, ds;
-    FechaHora::GetDate(anio, mes, dia, ds);
+    sFec fecha;
+    FechaHora::GetDate(fecha);
 
-    mov.dia = dia;
-    mov.mes = mes;
-    mov.anio = anio;
+    mov.dia = fecha.dia;
+    mov.mes = fecha.mes;
+    mov.anio = fecha.anio;
     mov.tipoMov = DEBE;
 
     strcpy(mov.detalle, "Plazo fijo");
@@ -1354,12 +1379,12 @@ namespace Menues
 
     sMovimientoCA mov;
 
-    int anio, mes, dia, ds;
-    FechaHora::GetDate(anio, mes, dia, ds);
+    sFec fecha;
+    FechaHora::GetDate(fecha);
 
-    mov.dia = dia;
-    mov.mes = mes;
-    mov.anio = anio;
+    mov.dia = fecha.dia;
+    mov.mes = fecha.mes;
+    mov.anio = fecha.anio;
     mov.tipoMov = DEBE;
 
     strcpy(mov.detalle, "Fondo inversion");
@@ -1397,14 +1422,14 @@ namespace Menues
       obtenerEntrada(importe, 10, 8, "Importe: ");
     } while (importe <= 0);
 
-    int anio, mes, dia, ds;
-    FechaHora::GetDate(anio, mes, dia, ds);
+    sFec fecha;
+    FechaHora::GetDate(fecha);
 
     sMovimientoCA movimiento;
 
-    movimiento.dia = dia;
-    movimiento.mes = mes;
-    movimiento.anio = anio;
+    movimiento.dia = fecha.dia;
+    movimiento.mes = fecha.mes;
+    movimiento.anio = fecha.anio;
     movimiento.tipoMov = DEBE;
 
     if (tipoRecarga == 'C')
@@ -1468,12 +1493,12 @@ namespace Menues
 
     sMovimientoCA mov;
 
-    int anio, mes, dia, ds;
-    FechaHora::GetDate(anio, mes, dia, ds);
+    sFec fecha;
+    FechaHora::GetDate(fecha);
 
-    mov.dia = dia;
-    mov.mes = mes;
-    mov.anio = anio;
+    mov.dia = fecha.dia;
+    mov.mes = fecha.mes;
+    mov.anio = fecha.anio;
     mov.tipoMov = 'H';
 
     strcpy(mov.detalle, "Deposito");
@@ -1581,12 +1606,12 @@ namespace Menues
     } while (monto <= 0);
 
     sMovimientoCA mov;
-    int anio, mes, dia, ds;
-    FechaHora::GetDate(anio, mes, dia, ds);
+    sFec fecha;
+    FechaHora::GetDate(fecha);
 
-    mov.dia = dia;
-    mov.mes = mes;
-    mov.anio = anio;
+    mov.dia = fecha.dia;
+    mov.mes = fecha.mes;
+    mov.anio = fecha.anio;
     mov.tipoMov = DEBE;
 
     string detalleStr = "Compra: " + comercio;
@@ -1627,12 +1652,12 @@ namespace Menues
       } while (monto <= 0);
 
       sMovimientoCA mov;
-      int anio, mes, dia, ds;
-      FechaHora::GetDate(anio, mes, dia, ds);
+      sFec fecha;
+      FechaHora::GetDate(fecha);
 
-      mov.dia = dia;
-      mov.mes = mes;
-      mov.anio = anio;
+      mov.dia = fecha.dia;
+      mov.mes = fecha.mes;
+      mov.anio = fecha.anio;
       mov.tipoMov = DEBE;
       strcpy(mov.detalle, "Compra Dolares");
       mov.importe = monto;
@@ -1650,12 +1675,12 @@ namespace Menues
       } while (monto <= 0);
 
       sMovimientoCA mov;
-      int anio, mes, dia, ds;
-      FechaHora::GetDate(anio, mes, dia, ds);
+      sFec fecha;
+      FechaHora::GetDate(fecha);
 
-      mov.dia = dia;
-      mov.mes = mes;
-      mov.anio = anio;
+      mov.dia = fecha.dia;
+      mov.mes = fecha.mes;
+      mov.anio = fecha.anio;
       mov.tipoMov = HABER;
       strcpy(mov.detalle, "Venta Dolares");
       mov.importe = monto * COTIZACION_USD;
