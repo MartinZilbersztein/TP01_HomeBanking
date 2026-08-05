@@ -797,7 +797,7 @@ namespace Menues
   void obtenerOpcionSeleccionada(int &opcionSeleccionada, str24 opciones[], short numOpciones)
   {
     for (int i = 0; i < numOpciones; i++)
-      MnsgBox(5, i + 1, i == 0 ? AMARILLO, BLANCO_BRILLANTE, opciones[i]);
+      MnsgBox(5, i + 1, i == 0 ? AMARILLO : BLANCO_BRILLANTE, opciones[i]);
     opcionSeleccionada = MenuNavegar(opciones, 1, numOpciones, 5);
   }
 
