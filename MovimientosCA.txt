@@ -29,3 +29,5 @@
 26  7 2026 D Fondo inversion                  200
  1  8 2026 D Plazo fijo                      1234
 12  5 2004 D vagos                             25
+ 5  8 2026 H Deposito                         300
+ 5  8 2026 H Deposito                         300

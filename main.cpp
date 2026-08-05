@@ -377,22 +377,22 @@ namespace Screen
       {
         if (Menu == lIni)
         {
-          _textcolor(15);
+          _textcolor(BLANCO_BRILLANTE);
           _gotoxy(cIni, lIni);
           cout << aMenu[Menu - lIni];
           Menu = lFin;
-          _textcolor(14);
+          _textcolor(AMARILLO_CLARO);
           _gotoxy(cIni, lFin);
           cout << aMenu[Menu - lIni];
         }
         else
         {
-          _textcolor(15);
+          _textcolor(BLANCO_BRILLANTE);
           _gotoxy(cIni, _wherey());
           cout << aMenu[Menu - lIni];
           Menu--;
           _gotoxy(cIni, _wherey() - 1);
-          _textcolor(14);
+          _textcolor(AMARILLO_CLARO);
           cout << aMenu[Menu - lIni];
         }
       }
@@ -400,22 +400,22 @@ namespace Screen
       {
         if (Menu == lFin)
         {
-          _textcolor(15);
+          _textcolor(BLANCO_BRILLANTE);
           _gotoxy(cIni, lFin);
           cout << aMenu[Menu - lIni];
           Menu = lIni;
           _gotoxy(cIni, lIni);
-          _textcolor(14);
+          _textcolor(AMARILLO_CLARO);
           cout << aMenu[Menu - lIni];
         }
         else
         {
-          _textcolor(15);
+          _textcolor(BLANCO_BRILLANTE);
           _gotoxy(cIni, _wherey());
           cout << aMenu[Menu - lIni];
           Menu++;
           _gotoxy(cIni, _wherey() + 1);
-          _textcolor(14);
+          _textcolor(AMARILLO_CLARO);
           cout << aMenu[Menu - lIni];
         }
       }
@@ -770,10 +770,7 @@ namespace Menues
   void Submenu_Recarga(char tipoRecarga, sMovimientoCA vrMovimientosCA[], int &cardMovCA);
   void Menu_MostrarCBU(sUsuario rUsuario);
   void Menu_DatosPersonales(sUsuario rUsuario);
-  void Menu_ModificarClave(sUsuario &rUsuario);
   void Submenu_Deposito(sMovimientoCA vrMovimientosCA[], int &cardMovCA);
-  void Menu_CrearCuenta(sUsuario &rUsuario);
-  void Menu_MisCuentas(sUsuario rUsuario);
   void Menu_Compras(sMovimientoCA vrMovimientosCA[], int &cardMovCA);
   void Menu_Logout(bool &correr);
   void Menu_CompraVentaDolares(sMovimientoCA vrMovimientosCA[], int &cardMovCA);
@@ -810,8 +807,11 @@ namespace Menues
 
   void obtenerOpcionSeleccionada(int &opcionSeleccionada, str24 opciones[], short numOpciones)
   {
+    const WORD COLOR_SELECCION = AMARILLO_CLARO;
+    const WORD COLOR_NORMAL = BLANCO_BRILLANTE;
+
     for (int i = 0; i < numOpciones; i++)
-      MnsgBox(5, i + 1, i == 0 ? AMARILLO : BLANCO_BRILLANTE, opciones[i]);
+      MnsgBox(5, i + 1, i == 0 ? COLOR_SELECCION : COLOR_NORMAL, opciones[i]);
     opcionSeleccionada = MenuNavegar(opciones, 1, numOpciones, 5);
   }
 
@@ -868,7 +868,7 @@ namespace Menues
 
   void Menu_Principal(sUsuario rUsuario, bool &correr)
   {
-    const int NUM_OPCIONES = 15;
+    const int NUM_OPCIONES = 12;
     const int MAX_MOV_TD = 20;
     const int MAX_MOV_TC = 20;
     const int MAX_MOV_CA = MAX_MOV_TD + MAX_MOV_TC + 25;
@@ -886,10 +886,7 @@ namespace Menues
         "  ╦ Recargar",
         " +x Generar Token",
         "132 Mostrar CBU",
-        " [] Mis Cuentas",
         "()/ Datos personales",
-        "/** Modificar clave",
-        "+[] Crear nueva cuenta",
         ">[] Depósito",
         "|^| Compras",
         "  ó Logout"};
@@ -927,24 +924,15 @@ namespace Menues
       Menu_MostrarCBU(rUsuario);
       break;
     case 8:
-      Menu_MisCuentas(rUsuario);
-      break;
-    case 9:
       Menu_DatosPersonales(rUsuario);
       break;
-    case 10:
-      Menu_ModificarClave(rUsuario);
-      break;
-    case 11:
-      Menu_CrearCuenta(rUsuario);
-      break;
-    case 12:
+    case 9:
       Submenu_Deposito(vrMovimientosCA, cardMovCA);
       break;
-    case 13:
+    case 10:
       Menu_Compras(vrMovimientosCA, cardMovCA);
       break;
-    case 14:
+    case 11:
       Menu_Logout(correr);
       break;
     }
@@ -1451,33 +1439,6 @@ namespace Menues
     pararFullScr();
   }
 
-  void Menu_ModificarClave(sUsuario &rUsuario)
-  {
-    string nuevaClave, claveActual;
-    inicMostDeco();
-    mostRotuloMenu("Modificar Clave");
-
-    obtenerEntrada(claveActual, 2, 5, "Ingrese clave actual: ");
-    if (claveActual == rUsuario.clave)
-    {
-      obtenerEntrada(nuevaClave, 2, 7, "Ingrese nueva clave : ");
-      if (nuevaClave != "")
-      {
-        rUsuario.clave = nuevaClave;
-        MnsgBox(2, 10, "Clave modificada con éxito.");
-      }
-      else
-      {
-        MnsgBox(2, 10, "La clave no puede estar vacía.");
-      }
-    }
-    else
-    {
-      MnsgBox(2, 10, "Clave actual incorrecta.");
-    }
-    pararFullScr();
-  }
-
   void Submenu_Deposito(sMovimientoCA vrMovimientosCA[], int &cardMovCA)
   {
     double monto;
@@ -1501,7 +1462,8 @@ namespace Menues
     mov.anio = fecha.anio;
     mov.tipoMov = 'H';
 
-    strcpy(mov.detalle, "Deposito");
+    strncpy(mov.detalle, "Deposito", sizeof(mov.detalle) - 1);
+    mov.detalle[sizeof(mov.detalle) - 1] = '\0';
     mov.importe = monto;
 
     vrMovimientosCA[cardMovCA++] = mov;
@@ -1510,80 +1472,6 @@ namespace Menues
 
     MnsgBox(2, 9, "Deposito realizado correctamente.");
 
-    pararFullScr();
-  }
-
-  void Menu_CrearCuenta(sUsuario &rUsuario)
-  {
-    const int NUM_OPCIONES_TIPO = 2;
-    int tipoOpcion;
-    str24 opcionesTipo[NUM_OPCIONES_TIPO] = {
-        "CA (Caja de Ahorro)",
-        "CC (Cuenta Corriente)"};
-
-    inicMostDeco();
-    mostRotuloMenu("CREAR NUEVA CUENTA - TIPO");
-    obtenerOpcionSeleccionada(tipoOpcion, opcionesTipo, NUM_OPCIONES_TIPO);
-
-    const int NUM_OPCIONES_MONEDA = 2;
-    int monedaOpcion;
-    str24 opcionesMoneda[NUM_OPCIONES_MONEDA] = {
-        "Pesos ($)",
-        "Dólares (u$s)"};
-
-    inicMostDeco();
-    mostRotuloMenu("CREAR NUEVA CUENTA - MONEDA");
-    obtenerOpcionSeleccionada(monedaOpcion, opcionesMoneda, NUM_OPCIONES_MONEDA);
-
-    inicMostDeco();
-    mostRotuloMenu("CREAR NUEVA CUENTA");
-
-    int correlativo = (rUsuario.DNI % 90) + 10;
-    string nroCuentaCreada = "009-00000" + to_string(correlativo);
-
-    MnsgBox(2, 4, "Titular: " + rUsuario.nombre);
-    MnsgBox(2, 6, "Tipo de cuenta: " + string(tipoOpcion == 0 ? "CA" : "CC"));
-    MnsgBox(2, 7, "Moneda        : " + string(monedaOpcion == 0 ? "Pesos ($)" : "Dólares (u$s)"));
-
-    MnsgBox(2, 10, "Cuenta creada nro. " + nroCuentaCreada + ",");
-
-    pararFullScr();
-  }
-
-  void Menu_MisCuentas(sUsuario rUsuario)
-  {
-    clrFullScr();
-    inicResumen("Mis Cuentas - Datos Bancarios");
-
-    cout << Separador(78, '-')
-         << endl
-         << left
-         << setw(16) << "Nro. Cta"
-         << setw(8) << "Tipo"
-         << setw(10) << "Moneda"
-         << setw(15) << "Saldo"
-         << setw(15) << "Estado"
-         << endl
-         << Separador(78, '-')
-         << endl;
-
-    cout << left
-         << setw(16) << rUsuario.numeroCuentaCA
-         << setw(8) << "CA"
-         << setw(10) << "$"
-         << right << setw(10) << fixed << setprecision(2) << 150000.00
-         << "     " << left << setw(15) << "Activa"
-         << endl;
-
-    cout << left
-         << setw(16) << rUsuario.numeroCuentaCA + 1
-         << setw(8) << "CC"
-         << setw(10) << "u$s"
-         << right << setw(10) << fixed << setprecision(2) << 450.00
-         << "     " << left << setw(15) << "Activa"
-         << endl;
-
-    cout << Separador(78, '-') << endl;
     pararFullScr();
   }
 
@@ -1617,7 +1505,8 @@ namespace Menues
     string detalleStr = "Compra: " + comercio;
     if (detalleStr.length() > 25)
       detalleStr = detalleStr.substr(0, 25);
-    strcpy(mov.detalle, detalleStr.c_str());
+    strncpy(mov.detalle, detalleStr.c_str(), sizeof(mov.detalle) - 1);
+    mov.detalle[sizeof(mov.detalle) - 1] = '\0';
     mov.importe = monto;
 
     vrMovimientosCA[cardMovCA++] = mov;
