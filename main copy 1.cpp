@@ -3,9 +3,7 @@
 #include <ctime>
 #include <windows.h>
 #include <fstream>
-#include <sstream>
 #include <string>
-#include <limits>
 
 #define record struct
 
@@ -94,9 +92,9 @@ struct sMovimientoTD
 
 struct sMovimientoTC
 {
-  short dia;
-  short mes;
-  short anio;
+  int dia;
+  int mes;
+  int anio;
   str25 detalle;
   str5 cuota;
   float importe;
@@ -108,8 +106,6 @@ struct sFec
   int mes;
   int anio;
 };
-
-
 
 short busBinVecDNI(sUsuario vec[], int dim, int dni)
 {
@@ -127,13 +123,6 @@ short busBinVecDNI(sUsuario vec[], int dim, int dni)
   }
   return -1;
 }
-
-void abrirArchivoTexto(string nombreArchivo)
-{
-  system(("notepad " + nombreArchivo).c_str());
-}
-
-
 
 namespace Screen
 {
@@ -484,8 +473,6 @@ namespace FechaHora
 
 }
 
-
-
 namespace EntradaSalida
 {
   void mostrarTexto(string mensaje)
@@ -496,29 +483,18 @@ namespace EntradaSalida
   {
     Screen::MnsgBox(x, y, mensaje);
     getline(cin, entrada);
-    if (!cin)
-    {
-      cin.clear();
-      cin.ignore(numeric_limits<streamsize>::max(), '\n');
-      entrada.clear();
-    }
   }
   void obtenerEntrada(double &entrada, short x, short y, string mensaje)
   {
     Screen::MnsgBox(x, y, mensaje);
-    while (!(cin >> entrada))
-    {
-      cin.clear();
-      cin.ignore(numeric_limits<streamsize>::max(), '\n');
-      Screen::MnsgBox(x, y, mensaje);
-    }
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    cin >> entrada;
+    cin.ignore();
   }
   void obtenerEntrada(int &entrada, short x, short y, string mensaje)
   {
-    double entradaEntera = 0;
+    double entradaEntera;
     obtenerEntrada(entradaEntera, x, y, mensaje);
-    entrada = static_cast<int>(entradaEntera);
+    entrada = entradaEntera;
   }
 
   void limpiarEstadoTeclas()
@@ -551,22 +527,16 @@ namespace Archivos
 
     int i = 0;
 
-    while (i < maxMovCA && (archivo >> vrMovimientosCA[i].dia))
+    while (archivo >> vrMovimientosCA[i].dia && i < maxMovCA)
     {
       archivo >> vrMovimientosCA[i].mes;
       archivo >> vrMovimientosCA[i].anio;
       archivo >> vrMovimientosCA[i].tipoMov;
-      archivo.get(); // consume single separator space
-
-      char detalleTemp[27] = {0};
-      archivo.read(detalleTemp, 26);
-      detalleTemp[26] = '\0';
-      strncpy(vrMovimientosCA[i].detalle, detalleTemp, sizeof(vrMovimientosCA[i].detalle) - 1);
-      vrMovimientosCA[i].detalle[sizeof(vrMovimientosCA[i].detalle) - 1] = '\0';
-      archivo.get(); // consume separator space before importe
-
+      archivo.ignore();
+      archivo.get(vrMovimientosCA[i].detalle, 25);
+      archivo.ignore();
       archivo >> vrMovimientosCA[i].importe;
-      archivo.ignore(numeric_limits<streamsize>::max(), '\n');
+      archivo.ignore();
 
       i++;
     }
@@ -580,31 +550,14 @@ namespace Archivos
   {
     string nombreArchivo = "MovimientosCA.txt";
     ofstream archivo(nombreArchivo, ios::app);
-    if (!archivo)
-      return;
 
-    archivo.seekp(0, ios::end);
-    if (archivo.tellp() > 0)
-      archivo << '\n';
-
-    string detalle(rMovimientoCA.detalle);
-    if (detalle.size() > 25)
-      detalle = detalle.substr(0, 25);
-    if (detalle.size() < 26)
-      detalle.append(26 - detalle.size(), ' ');
-
-    ostringstream ssImporte;
-    ssImporte << fixed << setprecision(2) << rMovimientoCA.importe;
-    string importeText = ssImporte.str();
-    if (importeText.size() < 10)
-      importeText = string(10 - importeText.size(), ' ') + importeText;
-
-    archivo << setw(2) << setfill(' ') << rMovimientoCA.dia;
-    archivo << ' ' << setw(2) << rMovimientoCA.mes;
-    archivo << ' ' << setw(4) << rMovimientoCA.anio;
-    archivo << ' ' << setw(1) << rMovimientoCA.tipoMov;
-    archivo << ' ' << detalle;
-    archivo << ' ' << importeText;
+    archivo << endl;
+    archivo << setw(2) << rMovimientoCA.dia;
+    archivo << " " << setw(2) << rMovimientoCA.mes;
+    archivo << " " << setw(4) << rMovimientoCA.anio;
+    archivo << " " << setw(1) << rMovimientoCA.tipoMov;
+    archivo << " " << left << setw(25) << rMovimientoCA.detalle << right;
+    archivo << " " << setw(10) << rMovimientoCA.importe;
 
     archivo.close();
   }
@@ -625,23 +578,21 @@ namespace Archivos
 
   void leerTD(sMovimientoCA vrMovCA[], int &cardMovCA, int maxMovCA, sMovimientoTD vrMovTD[], int &cardMovTD)
   {
+    sMovimientoCA rMovimientoCA;
     string nombreArchivo = "MovimientosTD.txt";
     ifstream archivo(nombreArchivo);
 
     int i = 0;
 
-    while (i < 20 && cardMovCA + i < maxMovCA && (archivo >> vrMovTD[i].dia))
+    while (archivo >> vrMovTD[i].dia && cardMovCA + i < maxMovCA)
     {
       archivo >> vrMovTD[i].mes;
       archivo >> vrMovTD[i].anio;
-      archivo.get();
-
-      archivo.read(vrMovTD[i].detalle, 25);
-      vrMovTD[i].detalle[25] = '\0';
-      archivo.get();
-
+      archivo.ignore();
+      archivo.get(vrMovTD[i].detalle, 26);
+      archivo.ignore();
       archivo >> vrMovTD[i].importe;
-      archivo.ignore(numeric_limits<streamsize>::max(), '\n');
+      archivo.ignore();
 
       agregarMovimientoVRCA(
           vrMovCA, cardMovCA, i,
@@ -658,27 +609,26 @@ namespace Archivos
 
   void leerTC(sMovimientoCA vrMovCA[], int &cardMovCA, int maxMovCA, sMovimientoTC vrMovTC[], int &cardMovTC)
   {
+    sMovimientoCA rMovimientoCA;
     string nombreArchivo = "MovimientosTC.txt";
     ifstream archivo(nombreArchivo);
 
     int i = 0;
+    int posMovCA = cardMovCA;
 
-    while (i < 20 && cardMovCA + i < maxMovCA && (archivo >> vrMovTC[i].dia))
+    while (archivo >> vrMovTC[i].dia && cardMovCA + i < maxMovCA)
     {
       archivo >> vrMovTC[i].mes;
       archivo >> vrMovTC[i].anio;
-      archivo.get();
-
-      archivo.read(vrMovTC[i].detalle, 25);
-      vrMovTC[i].detalle[25] = '\0';
-      archivo.get();
-
-      archivo.read(vrMovTC[i].cuota, 5);
-      vrMovTC[i].cuota[5] = '\0';
-      archivo.get();
+      archivo.ignore();
+      archivo.get(vrMovTC[i].detalle, 25);
+      archivo.ignore();
+      archivo.get(vrMovTC[i].cuota, 5);
+      archivo.ignore();
 
       archivo >> vrMovTC[i].importe;
-      archivo.ignore(numeric_limits<streamsize>::max(), '\n');
+
+      posMovCA = cardMovCA + i;
 
       agregarMovimientoVRCA(
           vrMovCA, cardMovCA, i,
@@ -822,10 +772,10 @@ namespace Menues
   void Menu_DatosPersonales(sUsuario rUsuario);
   void Submenu_Deposito(sMovimientoCA vrMovimientosCA[], int &cardMovCA);
   void Menu_Compras(sMovimientoCA vrMovimientosCA[], int &cardMovCA);
+  void Menu_Logout();
   void Menu_CompraVentaDolares(sMovimientoCA vrMovimientosCA[], int &cardMovCA);
   void Menu_GenerarToken();
-  void Menu_ListarArchivos(sMovimientoCA vrMovimientosCA[], int cardMovCA, sMovimientoTD vrMovimientosTD[], int cardMovTD, sMovimientoTC vrMovimientosTC[], int cardMovTC);
-  void Menu_Logout();
+  void Menu_Cuentas(sMovimientoCA vrMovimientosCA[], int cardMovCA);
 
   void clrFullScr()
   {
@@ -858,11 +808,8 @@ namespace Menues
 
   void obtenerOpcionSeleccionada(int &opcionSeleccionada, str24 opciones[], short numOpciones)
   {
-    const WORD COLOR_SELECCION = AMARILLO_CLARO;
-    const WORD COLOR_NORMAL = BLANCO_BRILLANTE;
-
     for (int i = 0; i < numOpciones; i++)
-      MnsgBox(5, i + 1, i == 0 ? COLOR_SELECCION : COLOR_NORMAL, opciones[i]);
+      MnsgBox(5, i + 1, i == 0 ? AMARILLO_CLARO : BLANCO_BRILLANTE, opciones[i]);
     opcionSeleccionada = MenuNavegar(opciones, 1, numOpciones, 5);
   }
 
@@ -897,16 +844,17 @@ namespace Menues
     {
       mostrarTexto("Ud. deberá dirigirse a un Cajero Automático o al propio Banco");
       Pausa();
+      exit(1);
     }
   }
 
-  void inicMenuPrincipal(sMovimientoCA vrMovimientosCA[], int &cardMovCA, int maxMovCA,
+  void inicMenuPrincipal(string nombre,
+                         sMovimientoCA vrMovimientosCA[], int &cardMovCA, int maxMovCA,
                          sMovimientoTD vrMovimientosTD[], int &cardMovTD,
                          sMovimientoTC vrMovimientosTC[], int &cardMovTC)
   {
-    cardMovCA = 0;
-    cardMovTD = 0;
-    cardMovTC = 0;
+    inicMostDeco();
+    mostRotuloMenu("Bienvenido/a " + nombre);
     Archivos::leerCA(vrMovimientosCA, cardMovCA, maxMovCA);
     Archivos::leerTD(vrMovimientosCA, cardMovCA, maxMovCA, vrMovimientosTD, cardMovTD);
     Archivos::leerTC(vrMovimientosCA, cardMovCA, maxMovCA, vrMovimientosTC, cardMovTC);
@@ -917,7 +865,7 @@ namespace Menues
 
   void Menu_Principal(sUsuario rUsuario)
   {
-    const int NUM_OPCIONES = 13;
+    const int NUM_OPCIONES = 12;
     const int MAX_MOV_TD = 20;
     const int MAX_MOV_TC = 20;
     const int MAX_MOV_CA = MAX_MOV_TD + MAX_MOV_TC + 25;
@@ -938,17 +886,14 @@ namespace Menues
         "()/ Datos personales",
         ">[] Depósito",
         "|^| Compras",
-        "||| Listar Archivos",
         "  ó Logout"};
 
-    inicMenuPrincipal(vrMovimientosCA, cardMovCA, MAX_MOV_CA,
+    inicMenuPrincipal(rUsuario.nombre,
+                      vrMovimientosCA, cardMovCA, MAX_MOV_CA,
                       vrMovimientosTD, cardMovTD,
                       vrMovimientosTC, cardMovTC);
 
-    while(true) {
-      inicMostDeco();
-      mostRotuloMenu("Bienvenido/a " + rUsuario.nombre);
-
+    while(not GetAsyncKeyState(VK_ESCAPE)) {
       obtenerOpcionSeleccionada(opcionSeleccionada, opciones, NUM_OPCIONES);
       switch (opcionSeleccionada)
       {
@@ -986,10 +931,7 @@ namespace Menues
         Menu_Compras(vrMovimientosCA, cardMovCA);
         break;
       case 11:
-        Menu_ListarArchivos(vrMovimientosCA, cardMovCA, vrMovimientosTD, cardMovTD, vrMovimientosTC, cardMovTC);
-        break;
-      case 12:
-        Menu_Logout();
+        Menu_Logout(correr);
         break;
       }
     }
@@ -1017,7 +959,7 @@ namespace Menues
     const int NUM_OPCIONES = 3;
     int opcionSeleccionada;
     str24 opciones[NUM_OPCIONES] = {
-        "Caja de Ahorro",
+        "Caja de ahorro",
         "Tarjeta Débito",
         "Tarjeta Crédito"};
 
@@ -1074,21 +1016,18 @@ namespace Menues
          << "Mov"
          << " " << setw(10) << "Fecha"
          << " T"
-         << " " << setw(25) << "Detalle";
-
-    if (bruto)
-      cout << " Importe";
-    else
-      cout << " " << setw(10) << "Debe"
-           << " " << setw(10) << "Haber"
-           << " Saldo";
-
-    cout << endl
+         << " " << setw(25) << "Detalle"
+         << " " << setw(10) << "Debe"
+         << " " << setw(10) << "Haber"
+         << " Saldo"
+         << endl
          << Separador(75, '-')
          << endl;
-
     for (int i = 0; i < cardMovCA; i++)
     {
+      if (bruto) {
+
+      }
       importe = convertirMonedas(vrMovimientosCA[i].importe, ARS, divisa);
 
       cout << right << setw(3) << i + 1
@@ -1096,16 +1035,10 @@ namespace Menues
            << " " << vrMovimientosCA[i].tipoMov
            << " " << left << setw(25) << vrMovimientosCA[i].detalle;
 
-      if (bruto)
-      {
-        cout << " " << right << setw(10) << fixed << setprecision(2) << importe << endl;
-        if (vrMovimientosCA[i].tipoMov == DEBE)
-          saldoCA -= importe;
-        else
-          saldoCA += importe;
-      }
-      else
-      {
+      if (bruto) {
+        cout << " " << right << setw(10) << fixed << setprecision(2) << importe
+             << " " << string(10, ' ');
+      } else {
         if (vrMovimientosCA[i].tipoMov == DEBE)
         {
           cout << " " << right << setw(10) << fixed << setprecision(2) << importe
@@ -1120,7 +1053,7 @@ namespace Menues
         }
 
         cout << " " << right << setw(10) << fixed << setprecision(2) << saldoCA
-             << endl;
+             << " " << endl;
       }
     }
     cout << Separador(75, '-') << endl
@@ -1128,7 +1061,6 @@ namespace Menues
          << endl;
 
     pararFullScr();
-    clrFullScr();
   }
 
   void Menu_TransferirDinero(sMovimientoCA vrMovimientosCA[],
@@ -1233,7 +1165,7 @@ namespace Menues
     }
   }
 
-  void Submenu_TarjetaDebito(sMovimientoTD vrMovimientosTD[], int &cardMovTD)
+  void Submenu_TarjetaDebito(sMovimientoTD vrMovimientosTD[], int &cardMovTD, bool bruto)
   {
     float totalTD = 0;
     clrFullScr();
@@ -1265,7 +1197,6 @@ namespace Menues
          << Separador() << endl;
 
     pararFullScr();
-    clrFullScr();
   }
 
   void Submenu_TarjetaCredito(sMovimientoTC vrMovimientosTC[], int &cardMovTC)
@@ -1302,7 +1233,6 @@ namespace Menues
          << Separador() << endl;
 
     pararFullScr();
-    clrFullScr();
   }
 
   void Menu_Recargas(sMovimientoCA vrMovimientosCA[], int &cardMovCA)
@@ -1469,6 +1399,9 @@ namespace Menues
   {
     string dato;
     double importe;
+    int anio, mes, dia, ds;
+    sFec fecha;
+    sMovimientoCA movimiento;
 
     inicMostDeco();
 
@@ -1477,23 +1410,19 @@ namespace Menues
     else
       MnsgBox(10, 3, "Recarga SUBE");
 
-    do
-    {
-      if (tipoRecarga == 'C')
-        obtenerEntrada(dato, 10, 6, "Numero de celular: ");
-      else
-        obtenerEntrada(dato, 10, 6, "Numero de tarjeta SUBE: ");
-    } while (dato.empty());
+    if (tipoRecarga == 'C')
+      obtenerEntrada(dato, 10, 6, "Numero de celular: ");
+    else
+      obtenerEntrada(dato, 10, 6, "Numero de tarjeta SUBE: ");
 
     do
     {
       obtenerEntrada(importe, 10, 8, "Importe: ");
     } while (importe <= 0);
 
-    sFec fecha;
     FechaHora::GetDate(fecha);
 
-    sMovimientoCA movimiento;
+    FechaHora::GetDate(anio, mes, dia, ds);
 
     movimiento.dia = fecha.dia;
     movimiento.mes = fecha.mes;
@@ -1501,15 +1430,17 @@ namespace Menues
     movimiento.tipoMov = DEBE;
 
     if (tipoRecarga == 'C')
-      strncpy(movimiento.detalle, "Recarga celular", sizeof(movimiento.detalle) - 1);
+      strcpy(movimiento.detalle, to_string("Recarga celular*") + dato);
     else
-      strncpy(movimiento.detalle, "Recarga SUBE", sizeof(movimiento.detalle) - 1);
-    movimiento.detalle[sizeof(movimiento.detalle) - 1] = '\0';
+      strcpy(movimiento.detalle, to_string("Recarga SUBE*") + dato);
 
     movimiento.importe = importe;
 
-    vrMovimientosCA[cardMovCA++] = movimiento;
+    vrMovimientosCA[cardMovCA] = movimiento;
+    cardMovCA++;
+
     Ordenar::ordXBurCA(vrMovimientosCA, cardMovCA);
+
     Archivos::escribirCA(movimiento, ARS);
 
     MnsgBox(10, 12, "Recarga realizada correctamente.");
@@ -1718,9 +1649,8 @@ namespace Menues
       Sleep(1000);
     }
 
-    while (GetAsyncKeyState(VK_SPACE) & 0x8000)
-      Sleep(20);
-    MostrarCursor();
+    limpiarEstadoTeclas();
+    pararFullScr();
   }
 
   void Menu_MostrarCBU(sUsuario rUsuario)
@@ -1794,33 +1724,38 @@ namespace Menues
     pararFullScr();
   }
 
-  void Menu_ListarArchivos(sMovimientoCA vrMovimientosCA[], int cardMovCA, sMovimientoTD vrMovimientosTD[], int cardMovTD, sMovimientoTC vrMovimientosTC[], int cardMovTC)
+  void abrirArchivoTexto(string nombreArchivo)
+  {
+    system("notepad " + nombreArchivo);
+  }
+
+  void Menu_ListaArchivos(sMovimientoCA vrMovimientosCA[], int cardMovCA, sMovimientoTD vrMovimientosTD[], int cardMovTD, sMovimientoTC vrMovimientosTC[], int cardMovTC)
   {
     const int NUM_OPCIONES = 3;
     int opcionSeleccionada;
     str24 opciones[NUM_OPCIONES] = {
-        "Caja de Ahorro",
+        "Caja de ahorro",
         "Tarjeta Débito",
         "Tarjeta Crédito"};
 
     inicMostDeco();
-    mostRotuloMenu("Listar Archivos");
+    mostRotuloMenu("Listar Movimientos");
     obtenerOpcionSeleccionada(opcionSeleccionada, opciones, NUM_OPCIONES);
 
     switch (opcionSeleccionada)
     {
-      case 0:
-        Submenu_Cuentas(vrMovimientosCA, cardMovCA, ARS, true);
-        abrirArchivoTexto("MovimientosCA.txt");
-        break;
-      case 1:
-        Submenu_TarjetaDebito(vrMovimientosTD, cardMovTD);
-        abrirArchivoTexto("MovimientosTD.txt");
-        break;
-      case 2:
-        Submenu_TarjetaCredito(vrMovimientosTC, cardMovTC);
-        abrirArchivoTexto("MovimientosTC.txt");
-        break;
+    case 0:
+      Submenu_Cuentas(vrMovimientosCA, cardMovCA, ARS, true);
+      abrirArchivoTexto("MovimientosCA.txt");
+      break;
+    case 1:
+      Submenu_TarjetaDebito(vrMovimientosTD, cardMovTD);
+      abrirArchivoTexto("MovimientosTD.txt");
+      break;
+    case 2:
+      Submenu_TarjetaCredito(vrMovimientosTC, cardMovTC);
+      abrirArchivoTexto("MovimientosTC.txt");
+      break;
     }
   }
 
